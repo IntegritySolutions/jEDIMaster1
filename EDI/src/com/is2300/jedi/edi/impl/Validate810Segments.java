@@ -87,6 +87,10 @@ public class Validate810Segments implements Validator {
         
         // We need to check the supplied segment to see if it is valid.
         switch ( toValidate ) {
+            // Since each case that is valid will set the `isValid` return 
+            //+ variable to `true`, we're just going to use the "fall-through"
+            //+ of the `case` functionality and only use the `break` statement
+            //+ when we set the return variable to `true`.
             case "ISA":
             case "GS":
             case "ST":
