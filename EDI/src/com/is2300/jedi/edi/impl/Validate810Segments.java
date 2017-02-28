@@ -124,4 +124,10 @@ public class Validate810Segments implements Validator {
         return isValid;
     }
 
+    @Override
+    public Boolean validate(String toValidate, String toCompare) {
+        //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Unused: Not Implemented"); 
+    }
+
 }

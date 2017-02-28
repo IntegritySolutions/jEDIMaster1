@@ -292,4 +292,10 @@ public class DocTypeValidator implements Validator {
     private static boolean isBetween(int num, int lower, int upper) {
         return lower <= num && num <= upper;
     }
+
+    @Override
+    public Boolean validate(String toValidate, String toCompare) {
+        //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Unused: Not Implemented"); 
+    }
 }

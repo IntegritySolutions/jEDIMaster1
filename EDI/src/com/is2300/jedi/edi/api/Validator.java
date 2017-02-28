@@ -68,4 +68,17 @@ public interface Validator {
      */
     public Boolean validate(String toValidate);
     
+    /**
+     * The <tt>validate()</tt> method checks the validity of the String.
+     * This method is able to check the validity of <strong>
+     * all</strong> EDI document types, regardless of industry. This method will
+     * need to be updated whenever the ANSI X11 Committee adds new document 
+     * types to the standards.
+     * 
+     * @param docType a <tt>java.lang.String</tt> representation of the EDI
+     *                document type code
+     * @return <tt>true</tt> if the EDI document type is valid; <tt>false</tt>
+     *          otherwise
+     */
+    public Boolean validate(String toValidate, String toCompare);
 }
