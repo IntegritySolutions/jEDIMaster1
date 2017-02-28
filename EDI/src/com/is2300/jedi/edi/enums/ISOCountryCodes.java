@@ -1411,7 +1411,7 @@ public enum ISOCountryCodes {
                 this.value3 = "PER";
                 this.code = 604;
                 this.name = "Peru";
-                this.dialingCode = 51"00";
+                this.dialingCode = 51;
                 break;
             case "ph":
                 this.value3 = "PHL";
@@ -1748,7 +1748,7 @@ public enum ISOCountryCodes {
                 this.value3 = "UKR";
                 this.code = 804;
                 this.name = "Ukraine";
-                this.dialingCode = "810";
+                this.dialingCode = 380;
             case "ae":
                 this.value3 = "ARE";
                 this.code = 784;
