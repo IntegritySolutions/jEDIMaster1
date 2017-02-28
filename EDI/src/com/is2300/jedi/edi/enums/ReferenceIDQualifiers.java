@@ -30,6 +30,16 @@ package com.is2300.jedi.edi.enums;
  */
 public enum ReferenceIDQualifiers {
     /**
+     * <strong>Billing Account</strong>
+     * <p>
+     * Account number under which billing is rendered.
+     */
+    BILLING_ACCOUNT("12"),
+    /**
+     * <strong>Provincial Tax Identification</strong>
+     */
+    PROVINCIAL_TAX_ID("4G"),
+    /**
      * <strong>Agreement Number</strong>
      * <p>
      * If a Master Agreement is to be cited on the Invoice order detail section,
@@ -38,6 +48,26 @@ public enum ReferenceIDQualifiers {
      * <tt>DTM01-"LEA"</tt>.
      */
     AGREEMENT_NUMBER("AH"),
+    /**
+     * <strong>Accounts Receivable Number</strong>
+     * <p>
+     * Supplier-assigned customer ID.
+     */
+    ACCOUNTS_RECEIVABLE_ID("AP"),
+    /**
+     * <strong>State Tax Identification Number</strong>
+     */
+    STATE_TAX_ID("BAD"),
+    /**
+     * <strong>Carrier's Reference Number</strong>
+     * <p>
+     * This may be the Invoice Number or a carrier assigned PRO Number.
+     */
+    CARRIERS_REFERENCE_NUMBER("CN"),
+    /**
+     * <strong>Goods and Service Tax Registration Number</strong>
+     */
+    GOODS_SVC_TAX_NUMBER("GT"),
     /**
      * <strong>Internal Order Number</strong>
      * <p>
@@ -111,12 +141,42 @@ public enum ReferenceIDQualifiers {
      */
     PO_NUMBER("PO"),
     /**
+     * <strong>Payee's Financial Institution Account Number</strong>
+     * <p>
+     * Account number for check, draft or wire payments for the payee; Receiving
+     * company account number for ACH transfer.
+     */
+    PAYEE_ACCT_NUMBER("PY"),
+    /**
+     * <strong>Payee's Financial Institution Routing Number</strong>
+     * <p>
+     * Routing number for check, draft or wire payments for the payee; Receiving
+     * depository financial institution transit routing number for ACH transfers.
+     */
+    PAYEE_ROUTING_NUMBER("RT"),
+    /**
+     * <strong>Federal Taxpayer's Identification Number</strong>
+     */
+    FEDERAL_TAX_ID("TJ"),
+    /**
+     * <strong>Tax Exempt Number</strong>
+     * <p>
+     * Identification number for tax-exempt, not-for-profit companies.
+     */
+    TAX_EXEMPT_NUMBER("TX"),
+    /**
      * <strong>Vender Order Number</strong>
      * <p>
      * This is the supplier's order number. Compare to <tt>BAK08</tt> in the 
      * 855. <tt>REF03</tt> is unused.
      */
     SUPPLIER_ON("VN"),
+    /**
+     * <strong>Value-Added Tax Registration Number</stron>
+     * <p>
+     * This value is only valid for European countries.
+     */
+    VAT_REGISTRATION_ID("VX"),
     /**
      * <strong>Mutually Defined</strong>
      * <p>
@@ -180,6 +240,44 @@ public enum ReferenceIDQualifiers {
                 break;
             case "ZZ":
                 this.definition = "Mutually Defined";
+                break;
+            case "12":
+                this.definition = "Billing Account";
+                break;
+            case "4G":
+                this.definition = "Provincial Tax Identification";
+                break;
+            case "AP":
+                this.definition = "Accounts Receivable Number";
+                break;
+            case "BAD":
+                this.definition = "State Tax Identification Number";
+                break;
+            case "CN":
+                this.definition = "Carrier's Reference Number (PRO/Invoice)";
+                break;
+            case "GT":
+                this.definition = "Goods and Service Tax Registration Number";
+                break;
+            case "PY":
+                this.definition = "Payee's Financial Institution Account Number"
+                        + "Company for Check, Draft or Wire Payments; Receiving"
+                        + " Account Number for ACH Transfer";
+                break;
+            case "RT":
+                this.definition = "Payee's Financial Institution Transit Rout"
+                        + "ing Number for Check, Draft or Wire Payments. "
+                        + "Receiving Depository Financial Institution Transit "
+                        + "Routing Number for ACH Transfers.";
+                break;
+            case "TJ":
+                this.definition = "Federal Taxpayer's Identification Number";
+                break;
+            case "TX":
+                this.definition = "Tax Exempt Number";
+                break;
+            case "VX":
+                this.definition = "Value-Added Tax Registration Number (Europe)";
                 break;
             default:
                 this.definition = "Undefined Qualifier";
