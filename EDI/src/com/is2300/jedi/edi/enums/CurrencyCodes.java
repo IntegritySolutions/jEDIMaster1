@@ -20,8 +20,9 @@
 package com.is2300.jedi.edi.enums;
 
 /**
- * CurrencyCodes is an enumeration of <tt>java.lang.String</tt>s for accessing
- * the various currency codes and their definitions that could appear in EDI
+ * <code>CurrencyCodes</code> is an enumeration of <tt>java.lang.String</tt>s 
+ * for accessing the various currency codes and their definitions that could 
+ * appear in EDI
  * transmissions.
  * 
  * @author Sean Carrick
