@@ -54,8 +54,8 @@ final class EDISettingsPanel extends javax.swing.JPanel {
         pnlDbServer = new javax.swing.JPanel();
         lblSvrPath = new javax.swing.JLabel();
         txtSvrPath = new javax.swing.JTextField();
-        lblDbName = new javax.swing.JLabel();
-        txtDbName = new javax.swing.JTextField();
+        lblPort = new javax.swing.JLabel();
+        txtPort = new javax.swing.JFormattedTextField();
         pnlOutput = new javax.swing.JPanel();
         lblOutputPath = new javax.swing.JLabel();
         txtOutputPath = new javax.swing.JTextField();
@@ -107,7 +107,7 @@ final class EDISettingsPanel extends javax.swing.JPanel {
                         .addComponent(optSeconds)
                         .addGap(35, 35, 35)
                         .addComponent(optMinutes)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(optHours)))
                 .addContainerGap())
         );
@@ -146,23 +146,23 @@ final class EDISettingsPanel extends javax.swing.JPanel {
 
         txtSvrPath.setText(org.openide.util.NbBundle.getMessage(EDISettingsPanel.class, "EDISettingsPanel.txtSvrPath.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(lblDbName, org.openide.util.NbBundle.getMessage(EDISettingsPanel.class, "EDISettingsPanel.lblDbName.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(lblPort, org.openide.util.NbBundle.getMessage(EDISettingsPanel.class, "EDISettingsPanel.lblPort.text")); // NOI18N
 
-        txtDbName.setText(org.openide.util.NbBundle.getMessage(EDISettingsPanel.class, "EDISettingsPanel.txtDbName.text")); // NOI18N
+        txtPort.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("###0"))));
 
         javax.swing.GroupLayout pnlDbServerLayout = new javax.swing.GroupLayout(pnlDbServer);
         pnlDbServer.setLayout(pnlDbServerLayout);
         pnlDbServerLayout.setHorizontalGroup(
             pnlDbServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(pnlDbServerLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(pnlDbServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(lblDbName)
-                    .addComponent(lblSvrPath))
+                .addGap(42, 42, 42)
+                .addComponent(lblSvrPath)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(pnlDbServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtSvrPath)
-                    .addComponent(txtDbName))
+                .addComponent(txtSvrPath)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(lblPort)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         pnlDbServerLayout.setVerticalGroup(
@@ -170,11 +170,10 @@ final class EDISettingsPanel extends javax.swing.JPanel {
             .addGroup(pnlDbServerLayout.createSequentialGroup()
                 .addGroup(pnlDbServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblSvrPath)
-                    .addComponent(txtSvrPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(pnlDbServerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblDbName)
-                    .addComponent(txtDbName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(txtSvrPath, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblPort)
+                    .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         org.openide.awt.Mnemonics.setLocalizedText(lblOutputPath, org.openide.util.NbBundle.getMessage(EDISettingsPanel.class, "EDISettingsPanel.lblOutputPath.text")); // NOI18N
@@ -196,7 +195,7 @@ final class EDISettingsPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtOutputPath))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, pnlOutputLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addGap(0, 121, Short.MAX_VALUE)
                         .addComponent(chkFileNames)))
                 .addContainerGap())
         );
@@ -233,9 +232,8 @@ final class EDISettingsPanel extends javax.swing.JPanel {
                     .addGroup(pnlProcessingLayout.createSequentialGroup()
                         .addGap(12, 12, 12)
                         .addGroup(pnlProcessingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(pnlDbServer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(pnlOutput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap())
+                            .addComponent(pnlOutput, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(pnlDbServer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
         );
         pnlProcessingLayout.setVerticalGroup(
             pnlProcessingLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -246,7 +244,8 @@ final class EDISettingsPanel extends javax.swing.JPanel {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkFiles)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(pnlOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(pnlOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -257,7 +256,9 @@ final class EDISettingsPanel extends javax.swing.JPanel {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(pnlServer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(pnlProcessing, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(pnlProcessing, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -317,7 +318,9 @@ final class EDISettingsPanel extends javax.swing.JPanel {
         chkDatabase.setSelected(NbPreferences.forModule(EDISettingsPanel.class)
                                                  .getBoolean("Database", true));
         txtSvrPath.setText(NbPreferences.forModule(EDISettingsPanel.class).get(
-                                                  "SvrPath", "localhost:3360"));
+                                                  "SvrPath", "localhost"));
+        txtPort.setText(NbPreferences.forModule(EDISettingsPanel.class).get(
+                                                            "SvrPort", "3306"));
         chkFiles.setSelected(NbPreferences.forModule(EDISettingsPanel.class)
                                               .getBoolean("FileOutput", false));
         txtOutputPath.setText(NbPreferences.forModule(EDISettingsPanel.class)
@@ -355,8 +358,8 @@ final class EDISettingsPanel extends javax.swing.JPanel {
                                                       chkDatabase.isSelected());
         NbPreferences.forModule(EDISettingsPanel.class).put("SvrPath", 
                                                           txtSvrPath.getText());
-        NbPreferences.forModule(EDISettingsPanel.class).put("DBName", 
-                                                           txtDbName.getText());
+        NbPreferences.forModule(EDISettingsPanel.class).put("SvrPort", 
+                                                           txtPort.getText());
         NbPreferences.forModule(EDISettingsPanel.class).putBoolean("FileOutput",
                                                          chkFiles.isSelected());
         NbPreferences.forModule(EDISettingsPanel.class).put("OutputPath", 
@@ -375,10 +378,10 @@ final class EDISettingsPanel extends javax.swing.JPanel {
     private javax.swing.JCheckBox chkDatabase;
     private javax.swing.JCheckBox chkFileNames;
     private javax.swing.JCheckBox chkFiles;
-    private javax.swing.JLabel lblDbName;
     private javax.swing.JLabel lblFilename;
     private javax.swing.JLabel lblOutputPath;
     private javax.swing.JLabel lblPeriod;
+    private javax.swing.JLabel lblPort;
     private javax.swing.JLabel lblSvrPath;
     private javax.swing.JLabel lblURL;
     private javax.swing.JRadioButton optHours;
@@ -389,18 +392,18 @@ final class EDISettingsPanel extends javax.swing.JPanel {
     private javax.swing.JPanel pnlProcessing;
     private javax.swing.JPanel pnlServer;
     private javax.swing.JSpinner spinPeriod;
-    private javax.swing.JTextField txtDbName;
     private javax.swing.JTextField txtFilename;
     private javax.swing.JTextField txtOutputPath;
+    private javax.swing.JFormattedTextField txtPort;
     private javax.swing.JTextField txtSvrPath;
     private javax.swing.JTextField txtURL;
     // End of variables declaration//GEN-END:variables
 
     private void setupDbPanel(boolean selected) {
         this.pnlDbServer.setEnabled(this.chkDatabase.isSelected());
-        this.txtDbName.setEnabled(this.chkDatabase.isSelected());
+        this.txtPort.setEnabled(this.chkDatabase.isSelected());
         this.txtSvrPath.setEnabled(this.chkDatabase.isSelected());
-        this.lblDbName.setEnabled(this.chkDatabase.isSelected());
+        this.lblPort.setEnabled(this.chkDatabase.isSelected());
         this.lblSvrPath.setEnabled(this.chkDatabase.isSelected());
     }
 
