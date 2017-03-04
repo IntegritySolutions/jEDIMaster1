@@ -3,5 +3,6 @@ AutoUpdate-Show-In-Client: true
 OpenIDE-Module: com.is2300.jedi.edi/1
 OpenIDE-Module-Install: com/is2300/jedi/edi/Installer.class
 OpenIDE-Module-Localizing-Bundle: com/is2300/jedi/edi/Bundle.properties
+OpenIDE-Module-Requires: org.openide.windows.IOProvider org.netbeans.spi.io.InputOutputProvider
 OpenIDE-Module-Specification-Version: 1.0
 

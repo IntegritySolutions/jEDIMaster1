@@ -22,14 +22,22 @@
  */
 package com.is2300.jedi.edi;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.prefs.Preferences;
-import javax.swing.JOptionPane;
+import org.netbeans.api.io.IOProvider;
+import org.netbeans.api.io.InputOutput;
+import org.openide.DialogDisplayer;
+import org.openide.NotifyDescriptor;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
 
 /**
  * <code>Processor</code> shepherds the incoming EDI file through the phases of
@@ -113,6 +121,12 @@ public class Processor {
      * server.
      */
     private Integer port;
+    /**
+     * A <code>java.lang.String</code> object to hold the proper path to the 
+     * remote SFTP or FTPS server from which we need to fetch the incoming EDI
+     * transmission file.
+     */
+    private String url;
     //</editor-fold>
     
     //<editor-fold desc="  Default Constructor  ">
@@ -123,6 +137,24 @@ public class Processor {
      * initialized, the the methods may be used to store data to the lists.
      */
     public Processor() {
+        
+        ////////////////////////////////////////////////////////////////////////
+        // DEBUGGING CODE: Remove before release build.                       //
+        ////////////////////////////////////////////////////////////////////////
+        // This code is to test the Timer and let me know if my math has been //
+        //+ fixed, so that the Timer only kicks off every period of time that //
+        //+ is stored in the settings.                                        //
+        ////////////////////////////////////////////////////////////////////////
+        Calendar cal = Calendar.getInstance();                                //
+        SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");              //
+        String time = fmt.format(cal.getTime());                              //
+        InputOutput io = IOProvider.getDefault().getIO("jEDI Errors", true);  //
+        io.getOut().println("Last EDI Processing Run: " + time);              //
+        io.getOut().println(new String(new char[80]).replace("\0", "-"));     //
+        ////////////////////////////////////////////////////////////////////////
+        // END OF DEBUGGING CODE!                                             //
+        ////////////////////////////////////////////////////////////////////////
+        
         // Initialize the various lists in this class.
         this.envelope = new ArrayList();
         this.group = new ArrayList();
@@ -158,12 +190,36 @@ public class Processor {
         //+ all data forjEDI Master.
         this.dbName = "is_jedi";    
         
+        // Last thing before shepherding the process is to store the path to the
+        //+ SFTP or FTPS server from which to fetch the incoming EDI trans-
+        //+ mission file.
+        this.url = Preferences.userRoot().get("SvrURL", 
+                                              "/home/sean/Public/edi/incoming");
+        
         // Begin shepherding the EDI transmission file through the parsing
         //+ process.
         this.shepherd();
     }
     //</editor-fold>
 
+    //<editor-fold desc="  Destructor  ">
+    private void selfDestruct() {
+        // We need to set everything to null, so that we can be garbage col-
+        //+ lected.
+        this.conn = null;
+        this.dbName = null;
+        this.dbSvr = null;
+        this.envelope = null;
+        this.group = null;
+        this.port = null;
+        this.pwd = null;
+        this.stmt = null;
+        this.transaction = null;
+        this.uname = null;
+        this.url = null;
+    }
+    //</editor-fold>
+    
     //<editor-fold desc="  Property Adding Methods  ">
     /**
      * Adds a <code>java.lang.String</code> array to the <code>java.util.List
@@ -240,19 +296,17 @@ public class Processor {
         } catch (ClassNotFoundException | SQLException ex) {
             
             // Handle the Exception.
-            // To do this, we will create a String to hold the message.
-            String msg;
+            // We'll use the NotifyDescriptor API to display the error to the
+            //+ user, if an Exception is thrown.
+            NotifyDescriptor d = new NotifyDescriptor.Exception(ex);
             
-            // Then, we need to build our message.
-            msg = "An exception of type " + ex.toString().split(":")[0];
-            msg = msg + " was thrown\n\nMessage:" + ex.getLocalizedMessage();
-            
-            // Next, show the error to the user, using a JOptionPane.
-            JOptionPane.showMessageDialog(null, msg, "Application Exception", 
-                                          JOptionPane.ERROR_MESSAGE);
-            
-            // Finally, print the stacktrace to the console.
-            ex.printStackTrace(System.err);
+            // Show the dialog to the user.
+            DialogDisplayer.getDefault().notify(d);
+
+            // Finally, print the stacktrace to the Output window.
+            InputOutput io = IOProvider.getDefault().getIO("jEDI SQL Access", 
+                                                                          true);
+            ex.printStackTrace(io.getErr());
             
         }
         
@@ -271,7 +325,37 @@ public class Processor {
      */
     private void shepherd() {
         // The first thing that we need to do is to setup the database access.
-        this.dbSetup();
+//        this.dbSetup();
+        
+        // Handle the file. This includes retrieving the file from the SFTP or
+        //+ FTPS server and storing it on a local disk for easier access. Once
+        //+ the file is local, this method will handle the processing of the 
+        //+ file, either internally or by outsourcing to other methods.
+        this.handleFile();
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+        //             K E E P   A S   T H E   L A S T   L I N E              //
+        ////////////////////////////////////////////////////////////////////////
+        // Destroy ourself.
+        this.selfDestruct();
+    }
+    
+    /**
+     * Handles all file handling and processing situations. Primarily, this 
+     * method puts the incoming EDI transmission file through all of the 
+     * required processing, so that the data can be extracted from it.
+     */
+    private void handleFile() {
+        String path = Preferences.userRoot().get("SvrURL", "/") +
+                      Preferences.userRoot().get("EDIFilename", "incoming.edi");
+        FileObject file = FileUtil.toFileObject(new File(path));
+        
+        // Verify that the file exists.
+        if ( file.isValid() ) {
+            // Handle all processing here... \\
+            
+        }
     }
     //</editor-fold>
 }

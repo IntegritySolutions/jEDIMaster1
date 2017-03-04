@@ -1,6 +1,6 @@
 /* {Installer.java}
  * 
- * A class to kick off the processing of incoming EDI transmission files.
+ * A class to kick off the processing the EDI transmission files.
  * 
  * Copyright (C) 2017 Integrity Solutions
  *
@@ -20,48 +20,34 @@
 package com.is2300.jedi.edi;
 
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.prefs.Preferences;
 import org.openide.modules.ModuleInstall;
-import org.openide.util.NbPreferences;
 
 public class Installer extends ModuleInstall {
 
     @Override
     public void restored() {
-        
-        // Create an anonymous inner Thread class.
-        class ProcessThread extends Thread {
-            public ProcessThread(String str) {
-                super(str);
-            }
-            
-            public void run() {
-                // Create our Processor object to process the EDI transmissions.
-                Processor shepherd = new Processor();
-            }
-        };
-        
-        // Create a Timer.
+         
+        // Create a Timer object.
         Timer process = new Timer(true);
         
         // Get the processor schedule from the settings.
-        Integer time = Preferences.userRoot().getInt("CheckPeriod", 15);
-        String period = Preferences.userRoot().get("TimePeriod", "minutes");
-        Integer by = 0;
+        Integer period = Preferences.userRoot().getInt("CheckPeriod", 15);
+        String style = Preferences.userRoot().get("TimePeriod", "minutes");
+        Integer inc = 0;
         
-        // Determine the time period to use: minutes or hours.
-        if ( period.equalsIgnoreCase("minutes") ) {
-            by = 60;
-        } else if ( period.equalsIgnoreCase("hours") ) {
-            by = 60*60;
+        // Determine the period style to use: minutes or hours.
+        if ( style.equalsIgnoreCase("minutes") ) {
+            inc = 60 * 1000; // Our increaser is set to sixty seconds.
+        } else if ( style.equalsIgnoreCase("hours") ) {
+            inc = (60 * 60) * 1000; // Our increaser is set to sixty minutes.
         }
         
         // Calculate the milliseconds for our Timer to wait between runs.
-        time *= by;
+        period = period * inc;  // Multiply the period by the increaser.
         
         // Create our schedule for the Timer to execute our Thread.
-        process.schedule(new ProcessTask(), time, time);
+        process.schedule(new ProcessTask(), 0, period);
     }
 
 }
