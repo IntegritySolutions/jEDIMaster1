@@ -1,8 +1,12 @@
 Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
-OpenIDE-Module: com.is2300.jedi.edi/1
+AutoUpdate-Essential-Module: true
+OpenIDE-Module: com.is2300.jedi.edi
+OpenIDE-Module-Name: EDI Processor
+OpenIDE-Module-Short-Description: Processes incoming EDI transmission files.
+OpenIDE-Module-Long-Description: Pulls the EDI file from the SFTP or FTPS server to a local path, parses the file, stores the retainable data to the database, generates any EDI transmissions that are required and sends them, creates planning schedules for review.
+OpenIDE-Module-Display-Category: Base System (Server Side)
 OpenIDE-Module-Install: com/is2300/jedi/edi/Installer.class
 OpenIDE-Module-Localizing-Bundle: com/is2300/jedi/edi/Bundle.properties
-OpenIDE-Module-Requires: org.openide.windows.IOProvider org.netbeans.spi.io.InputOutputProvider
 OpenIDE-Module-Specification-Version: 1.0
 

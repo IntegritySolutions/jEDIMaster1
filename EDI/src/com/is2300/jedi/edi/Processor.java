@@ -22,7 +22,6 @@
  */
 package com.is2300.jedi.edi;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -36,8 +35,6 @@ import org.netbeans.api.io.IOProvider;
 import org.netbeans.api.io.InputOutput;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
 
 /**
  * <code>Processor</code> shepherds the incoming EDI file through the phases of
@@ -148,9 +145,11 @@ public class Processor {
         Calendar cal = Calendar.getInstance();                                //
         SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");              //
         String time = fmt.format(cal.getTime());                              //
-        InputOutput io = IOProvider.getDefault().getIO("jEDI Errors", true);  //
+        InputOutput io = IOProvider.getDefault().getIO("EDI Processing", false);
         io.getOut().println("Last EDI Processing Run: " + time);              //
         io.getOut().println(new String(new char[80]).replace("\0", "-"));     //
+//        NotifyDescriptor d = new NotifyDescriptor.Message("Started at " + time);
+//        DialogDisplayer.getDefault().notify(d);
         ////////////////////////////////////////////////////////////////////////
         // END OF DEBUGGING CODE!                                             //
         ////////////////////////////////////////////////////////////////////////
@@ -347,15 +346,18 @@ public class Processor {
      * required processing, so that the data can be extracted from it.
      */
     private void handleFile() {
-        String path = Preferences.userRoot().get("SvrURL", "/") +
-                      Preferences.userRoot().get("EDIFilename", "incoming.edi");
-        FileObject file = FileUtil.toFileObject(new File(path));
-        
-        // Verify that the file exists.
-        if ( file.isValid() ) {
-            // Handle all processing here... \\
-            
-        }
+        InputOutput io = IOProvider.getDefault().getIO("EDI Processing", false);       //
+        io.getOut().println("Processing file...");              //
+        io.getOut().println(new String(new char[80]).replace("\0", "-"));     //
+//        String path = Preferences.userRoot().get("SvrURL", "/") +
+//                      Preferences.userRoot().get("EDIFilename", "incoming.edi");
+//        FileObject file = FileUtil.toFileObject(new File(path));
+//        
+//        // Verify that the file exists.
+//        if ( file.isValid() ) {
+//            // Handle all processing here... \\
+//            
+//        }
     }
     //</editor-fold>
 }

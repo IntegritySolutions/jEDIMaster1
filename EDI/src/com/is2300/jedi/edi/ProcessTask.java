@@ -21,6 +21,8 @@
 package com.is2300.jedi.edi;
 
 import java.util.TimerTask;
+import org.netbeans.api.io.IOProvider;
+import org.netbeans.api.io.InputOutput;
 
 /**
  *
@@ -29,15 +31,31 @@ import java.util.TimerTask;
  * @since 0.5.0
  */
 public class ProcessTask extends TimerTask {
-
+    // Private member field.
+    ProcessThread proc;
+    
     public ProcessTask() {
+        proc = new ProcessThread("Processing");
     }
 
-    ProcessThread proc = new ProcessThread("Processing");
-            
+           
     @Override
     public void run() {
-        proc.start();
+//        if ( proc.isDaemon() && proc.isAlive() ) {
+//            try {
+//                proc.join();
+//            } catch (InterruptedException ex) {
+//                InputOutput io = IOProvider.getDefault().getIO(
+//                                                         "Thread Errors", true);
+//                io.getOut().println("Processing file...");
+//                io.getOut().println(new String(new char[80]).replace(
+//                                                                    "\0", "-"));
+//            }
+//        } else {
+//            proc.start();
+//        }
+        // Create our Processor object to process the EDI transmissions.
+        Processor shepherd = new Processor();
     }
 
 }
