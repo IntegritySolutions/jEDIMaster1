@@ -47,6 +47,8 @@ public class Installer extends ModuleInstall {
         period = period * inc;  // Multiply the period by the increaser.
         
         // Create our schedule for the Timer to execute our Thread.
+	// Should run immediately, then repeat each `period` until cancelled
+	//+ or the application is terminated.
         process.schedule(new ProcessTask(), 0, period);
     }
 
