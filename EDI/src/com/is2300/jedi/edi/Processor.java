@@ -30,11 +30,22 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 import java.util.prefs.Preferences;
 import org.netbeans.api.io.IOProvider;
 import org.netbeans.api.io.InputOutput;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
+import org.openide.util.NbPreferences;
+import com.is2300.jedi.edi.gui.options.EDISettingsOptionsPanelController;
+import com.is2300.jedi.edi.impl.FGValidator;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import org.openide.filesystems.FileObject;
+import org.openide.filesystems.FileUtil;
+import org.openide.util.Exceptions;
 
 /**
  * <code>Processor</code> shepherds the incoming EDI file through the phases of
@@ -49,7 +60,24 @@ import org.openide.NotifyDescriptor;
  * @since 0.5.0
  */
 public class Processor {
+    //<editor-fold desc="  Private Constant Declarations  ">
+    /**
+     * Constant for handling the title of the output window to use for our
+     * various messages.
+     */
+    private static final String MSG_TITLE = "EDI Processing";
+    
+    private final Preferences PREFS = NbPreferences.forModule(
+                                       EDISettingsOptionsPanelController.class);
+    //</editor-fold>
+    
     //<editor-fold desc="  Private Member Fields  ">
+    /**
+     * A <code>java.util.List</code> of <code>java.lang.String</code> elements
+     * that holds <strong>all</strong> lines of the incoming EDI transmission
+     * file.
+     */
+    private List<String> asLines;
     /**
      * A <code>java.util.List</code> of <code>java.lang.String</code> elements
      * that holds the Interchange Control Header and Trailer information for a
@@ -83,6 +111,22 @@ public class Processor {
      * and there will be multiple validators used.
      */
     private List<String[]> transaction;
+    /**
+     * A <code>java.lang.Integer</code> to keep count of how many transactions
+     * are contained in a functional group. This counter gets reset after each
+     * functional group ends.
+     */
+    private Integer t_Count;
+    /**
+     * A <code>java.lang.Integer</code> to keep a running count of how many
+     * transactions are contained in a single transmission.
+     */
+    private Integer total_T_Count;
+    /**
+     * A <code>java.lang.Integer</code> to keep count of how many transactions
+     * are contained in a functional group.
+     */
+    private Integer gT_Count;
     /**
      * A <code>java.sql.Connection</code> object for connecting to the MySQL
      * database server.
@@ -124,6 +168,34 @@ public class Processor {
      * transmission file.
      */
     private String url;
+    /**
+     * <code>java.util.Calendar</code> object for getting the system date and
+     * time for various output messages.
+     */
+    private Calendar cal;
+    /**
+     * <code>java.text.SimpleDateFormat</code> object for formatting the system
+     * date and time for the various output messages.
+     */
+    private SimpleDateFormat fmt;
+    /**
+     * <code>org.netbeans.api.io.InputOutput</code> object for writing various
+     * messages to the Platform Output window.
+     */
+    private InputOutput io;
+    /**
+     * <code>java.lang.String</code> object to hold the formatted current time
+     * for the various output messages.
+     */
+    private String time;
+    /**
+     * <code>java.util.Calendar</code> to hold the processing start time.
+     */
+    private Calendar start;
+    /**
+     * <code>java.util.Calendar</code> to hold the processing end time.
+     */
+    private Calendar end;
     //</editor-fold>
     
     //<editor-fold desc="  Default Constructor  ">
@@ -135,29 +207,25 @@ public class Processor {
      */
     public Processor() {
         
-        ////////////////////////////////////////////////////////////////////////
-        // DEBUGGING CODE: Remove before release build.                       //
-        ////////////////////////////////////////////////////////////////////////
-        // This code is to test the Timer and let me know if my math has been //
-        //+ fixed, so that the Timer only kicks off every period of time that //
-        //+ is stored in the settings.                                        //
-        ////////////////////////////////////////////////////////////////////////
-        Calendar cal = Calendar.getInstance();                                //
-        SimpleDateFormat fmt = new SimpleDateFormat("HH:mm:ss");              //
-        String time = fmt.format(cal.getTime());                              //
-        InputOutput io = IOProvider.getDefault().getIO("EDI Processing", false);
-        io.getOut().println("Last EDI Processing Run: " + time);              //
-        io.getOut().println(new String(new char[80]).replace("\0", "-"));     //
-//        NotifyDescriptor d = new NotifyDescriptor.Message("Started at " + time);
-//        DialogDisplayer.getDefault().notify(d);
-        ////////////////////////////////////////////////////////////////////////
-        // END OF DEBUGGING CODE!                                             //
-        ////////////////////////////////////////////////////////////////////////
+        // Show processing initialization message:
+        //- Begin by initializing our messaging fields.
+        this.cal = Calendar.getInstance();
+        this.start = this.cal;
+        this.fmt = new SimpleDateFormat("EEE: MM/dd/yyyy - HH:mm:ss", 
+                                                           Locale.getDefault());
+        io = IOProvider.getDefault().getIO(MSG_TITLE, false);
+        this.time = this.fmt.format(this.cal.getTime());
+        io.getOut().println(this.time + ":  Initializing EDI processor...");
         
         // Initialize the various lists in this class.
         this.envelope = new ArrayList();
         this.group = new ArrayList();
         this.transaction = new ArrayList();
+        
+        // Initialize the various Integers in this class.
+        this.t_Count = 0;
+        this.total_T_Count = 0;
+        this.gT_Count = 0;
         
         // Initialize the database user information.
         this.uname = "_edi";
@@ -203,6 +271,13 @@ public class Processor {
 
     //<editor-fold desc="  Destructor  ">
     private void selfDestruct() {
+        // Output the lapsed time of the document processing.
+        this.end = Calendar.getInstance();
+        int mins = this.end.compareTo(this.start);
+        this.io.getOut().println("Processed in " + 
+                                 new Double(mins / (1000 * 60)) + 
+                                                                 " minute(s).");
+        
         // We need to set everything to null, so that we can be garbage col-
         //+ lected.
         this.conn = null;
@@ -216,6 +291,16 @@ public class Processor {
         this.transaction = null;
         this.uname = null;
         this.url = null;
+        this.asLines = null;
+        this.cal = null;
+        this.end = null;
+        this.fmt = null;
+        this.io = null;
+        this.start = null;
+        this.t_Count = null;
+        this.total_T_Count = null;
+        this.gT_Count = null;
+        this.time = null;
     }
     //</editor-fold>
     
@@ -323,6 +408,12 @@ public class Processor {
      * the validation thereof.
      */
     private void shepherd() {
+        // Display progress.
+        this.cal = Calendar.getInstance();
+        this.time = fmt.format(this.cal.getTime());
+        this.io.getOut().println(this.time + ":  Begin shepherding EDI file "
+                                             + "process...");
+        
         // The first thing that we need to do is to setup the database access.
 //        this.dbSetup();
         
@@ -332,6 +423,10 @@ public class Processor {
         //+ file, either internally or by outsourcing to other methods.
         this.handleFile();
         
+        // Now that the file has been opened and is read into our List variable,
+        //+ we need to process the file appropriately. To do this, we are going 
+        //+ to pass control to the parser() method.
+        this.parser();
         
         ////////////////////////////////////////////////////////////////////////
         //             K E E P   A S   T H E   L A S T   L I N E              //
@@ -346,18 +441,153 @@ public class Processor {
      * required processing, so that the data can be extracted from it.
      */
     private void handleFile() {
-        InputOutput io = IOProvider.getDefault().getIO("EDI Processing", false);       //
-        io.getOut().println("Processing file...");              //
-        io.getOut().println(new String(new char[80]).replace("\0", "-"));     //
-//        String path = Preferences.userRoot().get("SvrURL", "/") +
-//                      Preferences.userRoot().get("EDIFilename", "incoming.edi");
-//        FileObject file = FileUtil.toFileObject(new File(path));
-//        
-//        // Verify that the file exists.
-//        if ( file.isValid() ) {
-//            // Handle all processing here... \\
-//            
-//        }
+        
+        // Display progress.
+        this.cal = Calendar.getInstance();
+        this.time = this.fmt.format(this.cal.getTime());
+        this.io.getOut().println(time + ":  Retrieving file...");
+        
+        // Retrieve the path to the incoming EDI file from the settings.
+        String path = this.PREFS.get("SvrURL", "/");
+        String fileName = this.PREFS.get("EDIFilename", "incoming.edi");
+        
+        try {
+            URL url = new URL(path);
+        } catch (MalformedURLException ex) {
+            Exceptions.printStackTrace(ex);
+            this.cal = Calendar.getInstance();
+            this.time = this.fmt.format(cal.getTime());
+            this.io.getOut().println(time + ":  The following Exception was "
+                                                                   + "caught:");
+            ex.printStackTrace(this.io.getErr());
+        }
+        this.cal = Calendar.getInstance();
+        this.time = this.fmt.format(this.cal.getTime());
+        this.io.getOut().println(time + ":  File Location: " + path);
+        
+        // Create a FileObject object for the file.
+        FileObject file = FileUtil.toFileObject(new File(url + "/" + fileName));
+        
+        // Verify that the file exists.
+        if ( file.isValid() ) {
+            // Handle all processing here... \\
+            this.cal = Calendar.getInstance();
+            this.time = this.fmt.format(cal.getTime());
+            this.io.getOut().println(time + ":  Incoming file is valid...");
+            
+            try {
+                this.asLines = file.asLines();
+                this.io.getOut().println("\tLines: " + asLines.size());
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+                this.cal = Calendar.getInstance();
+                this.time = this.fmt.format(cal.getTime());
+                this.io.getOut().println(time + ":  The following Exception was"
+                                                                  + " caught:");
+                ex.printStackTrace(this.io.getErr());
+            } finally {
+                // Now, we need to parse out the data that we just brought into
+                //+ the list "asLines". To do this, return to the shepherding
+                //+ method.
+                return;
+            }
+            
+        }
+    }
+    
+    /**
+     * This method handles all file parsing. In this method, the 
+     * <code>java.util.List&lt;T&gt;</code> created in the <code>handleFile()
+     * </code> method will get parsed into its derivative fields, then stored
+     * into the appropriate List. Finally, this method will call the correct
+     * document algorithm for the document type currently being processed.
+     */
+    private void parser() {
+        
+        // Declare an array of type String in which to store our fields.
+        String[] fields;
+        
+        // Declare a variable to hold a message text for validation messages.
+        String msg;
+        
+        // Declare some validation flags and default them to invalid.
+        Boolean validEnv = false;
+        Boolean validGrp = false;
+        Boolean validTSet = false;
+        Boolean validSeg = false;
+        
+        // We need to loop through the list of lines from the file and split 
+        //+ them into their individual fields. Once they are split into the
+        //+ fields, we need to determine what the line represents and store the
+        //+ fields in the appropriate place. Once they are stored, we need to
+        //+ move on to the next line.
+        this.cal = Calendar.getInstance();
+        this.time = this.fmt.format(cal.getTime());
+        this.io.getOut().println("Commencing parsing...");
+        for ( String line : asLines ) {
+            fields = line.split("\\*");
+            
+            // Now, determine what needs to be done. This is accomplished by 
+            //+ looking at the value of the zeroeth (0th) element of the array.
+            switch ( fields[0].toLowerCase() ) {
+                case "isa":     // Use fall-through
+                case "iea":
+                    this.envelope.add(fields);
+                    break;
+                case "ge":
+                    // Grab the total transactions in this functional group.
+                    this.gT_Count = this.t_Count;
+                    
+                    // Add the functional group transaction count to the total
+                    //+ transaction count.
+                    this.total_T_Count += this.t_Count;
+                    
+                    // Reset the transaction count for the processor.
+                    this.t_Count = 0;
+                    
+                    // Validate whether the functional group is valid.
+                    validGrp = FGValidator.validateGroup(
+                            this.group.get(this.group.size() - 1)[6], fields[2], 
+                            new Integer(fields[1]), this.gT_Count);
+                    
+                    // Check our findings.
+                    if (!validGrp) {
+                        // Report to the Output Window that this group is not
+                        //+ valid and the control numbers, as well as the
+                        //+ reported transaction count and actual count.
+                        msg = "Functional Group (" + this.group.get(
+                                this.group.size() - 1)[6] + ") is NOT valid.";
+                        msg += "\n\tHeader Control Number (Trailer):  ";
+                        msg += this.group.get(this.group.size() - 1)[6] + "(";
+                        msg += fields[2] + ")\n\t";
+                        msg += "Number Reported Transactions (Actual):  ";
+                        msg += fields[1] + "(" + this.gT_Count + ")";
+                    } else {
+                        msg = "Funtional Group (" + fields[2] + ") transmitted";
+                        msg += " " + this.gT_Count + " transaction sets.";
+                    }
+
+                    // Provide report to Output Window.
+                    this.cal = Calendar.getInstance();
+                    this.time = this.fmt.format(cal.getTime());
+                    this.io.getOut().println(time + ":  " + msg);
+                case "gs":
+                    this.group.add(fields);
+                    break;
+                case "se":
+                    this.t_Count += 1;  // Then fall-through
+                default:        // All other segments
+                    this.transaction.add(fields);
+            }
+        }
+        
+        this.cal = Calendar.getInstance();
+        this.time = this.fmt.format(cal.getTime());
+        this.io.getOut().println("Parsing complete.");
+        this.io.getOut().println("\t   Envelopes:  " + this.envelope.size() / 2);
+        this.io.getOut().println("\t      Groups:  " + this.group.size() / 2);
+        this.io.getOut().println("\tTransactions:  " + this.total_T_Count);
+        
     }
     //</editor-fold>
 }
