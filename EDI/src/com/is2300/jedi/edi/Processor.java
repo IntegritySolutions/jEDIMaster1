@@ -39,7 +39,9 @@ import org.openide.NotifyDescriptor;
 import org.openide.util.NbPreferences;
 import com.is2300.jedi.edi.gui.options.EDISettingsOptionsPanelController;
 import com.is2300.jedi.edi.impl.FGValidator;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -196,6 +198,12 @@ public class Processor {
      * <code>java.util.Calendar</code> to hold the processing end time.
      */
     private Calendar end;
+    /**
+     * A <code>java.util.StringBuilder</code> object for building messages to
+     * store in the Output Report file. This will be built in tandem with the
+     * messages being writen to the Output Window.
+     */
+    private StringBuilder outBldr;
     //</editor-fold>
     
     //<editor-fold desc="  Default Constructor  ">
@@ -207,6 +215,9 @@ public class Processor {
      */
     public Processor() {
         
+        // First thing to do is to initialize our output builder object.
+        this.outBldr = new StringBuilder(); // Now it is ready to use.
+        
         // Show processing initialization message:
         //- Begin by initializing our messaging fields.
         this.cal = Calendar.getInstance();
@@ -216,6 +227,8 @@ public class Processor {
         io = IOProvider.getDefault().getIO(MSG_TITLE, false);
         this.time = this.fmt.format(this.cal.getTime());
         io.getOut().println(this.time + ":  Initializing EDI processor...");
+        this.outBldr.append(this.fmt.format(this.cal.getTime()));
+        this.outBldr.append(": Initializing EDI processor...\n");
         
         // Initialize the various lists in this class.
         this.envelope = new ArrayList();
@@ -277,6 +290,10 @@ public class Processor {
         this.io.getOut().println("Processed in " + 
                                  new Double(mins / (1000 * 60)) + 
                                                                  " minute(s).");
+        this.outBldr.append(this.time);
+        this.outBldr.append(":  Pocessed in ");
+        this.outBldr.append(new Double(mins / (1000 * 60)));
+        this.outBldr.append(" minute(s).\n");
         
         // We need to set everything to null, so that we can be garbage col-
         //+ lected.
@@ -413,6 +430,8 @@ public class Processor {
         this.time = fmt.format(this.cal.getTime());
         this.io.getOut().println(this.time + ":  Begin shepherding EDI file "
                                              + "process...");
+        this.outBldr.append(this.time);
+        this.outBldr.append(":  Begin shepherding EDI file process...\n");
         
         // The first thing that we need to do is to setup the database access.
 //        this.dbSetup();
@@ -427,6 +446,9 @@ public class Processor {
         //+ we need to process the file appropriately. To do this, we are going 
         //+ to pass control to the parser() method.
         this.parser();
+        
+        // Save the output report to file.
+        this.saveReport();
         
         ////////////////////////////////////////////////////////////////////////
         //             K E E P   A S   T H E   L A S T   L I N E              //
@@ -446,6 +468,8 @@ public class Processor {
         this.cal = Calendar.getInstance();
         this.time = this.fmt.format(this.cal.getTime());
         this.io.getOut().println(time + ":  Retrieving file...");
+        this.outBldr.append(this.time);
+        this.outBldr.append(":  Retrieving file(s)...\n");
         
         // Retrieve the path to the incoming EDI file from the settings.
         String path = this.PREFS.get("SvrURL", "/");
@@ -459,11 +483,19 @@ public class Processor {
             this.time = this.fmt.format(cal.getTime());
             this.io.getOut().println(time + ":  The following Exception was "
                                                                    + "caught:");
+            this.outBldr.append(this.time);
+            this.outBldr.append(":  The following exception was caught:\n\t");
+            this.outBldr.append(ex.getLocalizedMessage());
+            this.outBldr.append("\n");
             ex.printStackTrace(this.io.getErr());
         }
         this.cal = Calendar.getInstance();
         this.time = this.fmt.format(this.cal.getTime());
         this.io.getOut().println(time + ":  File Location: " + path);
+        this.outBldr.append(this.time);
+        this.outBldr.append(":  File Location: ");
+        this.outBldr.append(path);
+        this.outBldr.append("\n");
         
         // Create a FileObject object for the file.
         FileObject file = FileUtil.toFileObject(new File(url + "/" + fileName));
@@ -474,16 +506,25 @@ public class Processor {
             this.cal = Calendar.getInstance();
             this.time = this.fmt.format(cal.getTime());
             this.io.getOut().println(time + ":  Incoming file is valid...");
+            this.outBldr.append(this.time);
+            this.outBldr.append(":  Incoming file is valid...\n");
             
             try {
                 this.asLines = file.asLines();
                 this.io.getOut().println("\tLines: " + asLines.size());
+                this.outBldr.append("\tLines: ");
+                this.outBldr.append(asLines.size());
+                this.outBldr.append("\n");
             } catch (IOException ex) {
                 Exceptions.printStackTrace(ex);
                 this.cal = Calendar.getInstance();
                 this.time = this.fmt.format(cal.getTime());
                 this.io.getOut().println(time + ":  The following Exception was"
                                                                   + " caught:");
+                this.outBldr.append(this.time);
+                this.outBldr.append(":  The following Exception was caught:");
+                this.outBldr.append("\n\t");
+                this.outBldr.append(ex.getLocalizedMessage());
                 ex.printStackTrace(this.io.getErr());
             } finally {
                 // Now, we need to parse out the data that we just brought into
@@ -523,7 +564,9 @@ public class Processor {
         //+ move on to the next line.
         this.cal = Calendar.getInstance();
         this.time = this.fmt.format(cal.getTime());
-        this.io.getOut().println("Commencing parsing...");
+        this.io.getOut().println(this.time + ":  Commencing parsing...");
+        this.outBldr.append(this.time);
+        this.outBldr.append(": Commencing parsing...\n");
         for ( String line : asLines ) {
             fields = line.split("\\*");
             
@@ -571,6 +614,8 @@ public class Processor {
                     this.cal = Calendar.getInstance();
                     this.time = this.fmt.format(cal.getTime());
                     this.io.getOut().println(time + ":  " + msg);
+                    this.outBldr.append(msg);
+                    this.outBldr.append("\n");
                 case "gs":
                     this.group.add(fields);
                     break;
@@ -587,7 +632,75 @@ public class Processor {
         this.io.getOut().println("\t   Envelopes:  " + this.envelope.size() / 2);
         this.io.getOut().println("\t      Groups:  " + this.group.size() / 2);
         this.io.getOut().println("\tTransactions:  " + this.total_T_Count);
+        this.outBldr.append(this.time);
+        this.outBldr.append(":  Parsing Complete.\n");
+        this.outBldr.append("\t   Envelopes:  ");
+        this.outBldr.append(this.envelope.size() / 2);  // Contains ISA & IEA
+        this.outBldr.append("\n\t      Groups:  ");
+        this.outBldr.append(this.group.size() / 2);     // Contains GS & GE
+        this.outBldr.append("\n\tTransactions:  ");
+        this.outBldr.append(this.total_T_Count);
+        this.outBldr.append("\n");
         
+    }
+    
+    void saveReport() {
+        
+        // Create File object to which to write the data.
+        File file;
+        
+        // Create a FileWriter object to wrap our File object in for easier
+        //+ writing functionality.
+        FileWriter fw = null;
+        
+        // Create a SimpleDateFormat object to set up the date/time for the
+        //+ file name for our report file.
+        SimpleDateFormat dt = new SimpleDateFormat("yyyy-MM-dd.HH-mm-ss");
+        
+        // Get the report storage path from the settings.
+        String rptPath = this.PREFS.get("OutputPath", 
+                                               System.getProperty("user.home"));
+        
+        // Create our file name from the SimpleDateFormat of the start time and
+        //+ add the ".rpt" extension.
+        String fname = dt.format(this.start.getTime()) + ".rpt";
+        
+        // Create our File object and point it to the file we wish to create.
+        file = new File(rptPath + System.getProperty("file.separator") + fname);
+        
+        // Now, we are going to attempt to write out the data from the Output
+        //+ Window to our report file.
+        try {
+            // Initialize our FileWriter object to wrap our File object.
+            fw = new FileWriter(file);
+            
+            // Create a BufferedWriter to wrap the FileWriter. This seems like
+            //+ an unnecessary step, however, it DOES ease the writing process.
+            BufferedWriter bw = new BufferedWriter(fw);
+            
+            // Write the built report from the StringBuilder object.
+            bw.write(this.outBldr.toString());
+            
+            // Flush the buffer so that the data will be present in the file.
+            bw.flush();
+            
+            // Close the BufferedWriter object.
+            bw.close();
+        } catch (IOException ex) {
+            // Display the NetBeans Platform error message box.
+            Exceptions.printStackTrace(ex);
+        } finally {
+            try {
+                // Attempt to close the FileWriter object.
+                fw.close();
+                
+                // Set our File object to null.
+                file = null;
+            } catch (IOException ex) {
+                // Again, display the NetBeans Platform error message box.
+                Exceptions.printStackTrace(ex);
+            }
+        }
     }
     //</editor-fold>
 }
