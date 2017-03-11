@@ -106,4 +106,84 @@ public class Utils {
         // Return our return value.
         return retVal;
     }
+    
+    /**
+     * <tt>string2Date(String date, String time)</tt> returns a <tt>
+     * <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Date.html">
+     * java.util.Date</a></tt> object that can then be used as is or to create
+     * other objects for use, such as a <tt>
+     * <a href="http://docs.oracle.com/javase/8/docs/api/java/util/Calendar.html">
+     * java.util.Calendar</a></tt> object.
+     * 
+     * @param date the <tt>java.lang.String</tt> that needs to be converted to a
+     *             <tt>java.util.Date</tt> object. The string needs to be 
+     *             formatted as either:
+     *              <ul><li>YYMMDD</li>
+     *                  <li>YYYYMMDD</li></ul>
+     *             If the string is formatted in any other manner, an invalid
+     *             date will be returned. <em>It is good practice to validate
+     *             the returned <tt>java.util.Date</tt> object before using it
+     *             </em>
+     * @param time the <tt>java.lang.String</tt> that needs to be converted to a
+     *              <tt>java.util.Date</tt> object. The string needs to be 
+     *              formatted as either:
+     *              <ul><li>HHMM</li>
+     *                  <li>HHMMSS</li></ul>
+     *              If the string is formatted in any other manner, an invalid
+     *              date will be returned. <em>It is good practice to validate
+     *              the returned <tt>java.util.Date</tt> object before using it
+     *              </em>
+     * @return <tt>java.util.Date</tt> object initialized to the date string
+     *          that was provided.
+     */
+    public static Date string2Date(String date, String time) {
+        // Declare three strings to hold the month, day and year once we parse
+        //+ them out of the date string that is provided.
+        Integer day = null;
+        Integer month = null;
+        Integer year = null;
+        
+        // Declare three strings to hold the house, minutes and seconds once we
+        //+ parse them out of the time string that is provided.
+        Integer hours = null;
+        Integer minutes = null;
+        Integer seconds = null;
+        
+        // Now, check the length of the date string.
+        if ( date.length() == 6 ) {
+            // The format of the string is YYMMDD, so we need to parse those
+            //+ individual fields out of the string.
+            year = new Integer(date.substring(0, 2));
+            month = new Integer(date.substring(2, 4));
+            day = new Integer(date.substring(4, 6));
+
+        } else if ( date.length() == 8 ) {
+            // The format of the string is YYYYMMDD, so we need to parse those
+            //+ individual fields out of the string.
+            year = new Integer(date.substring(0, 4));
+            month = new Integer(date.substring(4, 6));
+            day = new Integer(date.substring(6, 8));
+            
+        }
+        
+        // Next, we need to deal with the time. So, we need to check its length.
+        if ( time.length() == 4 ) {
+            // The format of the string is HHMM, so we need to parse those
+            //+ individual fields out of the string.
+            hours = new Integer(time.substring(0, 2));
+            minutes = new Integer(time.substring(2, 4));
+            seconds = 0;
+            
+        } else if ( time.length() == 6 ) {
+            // The format of the string is HHMMSS, so we need to parse those
+            //+ individual fields out of the string.
+            hours = new Integer(time.substring(0, 2));
+            minutes = new Integer(time.substring(2, 4));
+            seconds = new Integer(time.substring(4, 6));
+            
+        }
+        
+        // Return our new Date object.
+        return new Date(year, month, day, hours, minutes, seconds);
+    }
 }

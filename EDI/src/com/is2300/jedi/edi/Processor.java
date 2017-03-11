@@ -39,12 +39,14 @@ import org.openide.NotifyDescriptor;
 import org.openide.util.NbPreferences;
 import com.is2300.jedi.edi.gui.options.EDISettingsOptionsPanelController;
 import com.is2300.jedi.edi.impl.FGValidator;
+import com.is2300.jedi.edi.utils.Utils;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.util.Exceptions;
@@ -286,14 +288,26 @@ public class Processor {
     private void selfDestruct() {
         // Output the lapsed time of the document processing.
         this.end = Calendar.getInstance();
-        int mins = this.end.compareTo(this.start);
-        this.io.getOut().println("Processed in " + 
-                                 new Double(mins / (1000 * 60)) + 
-                                                                 " minute(s).");
+        long strt = this.start.getTimeInMillis();
+        long fnsh = this.end.getTimeInMillis();
+        long mins = fnsh - strt;
+        float procTime = mins / 60000;
+        this.io.getOut().printf("Processed in %1$f minute(s)", procTime);
         this.outBldr.append(this.time);
         this.outBldr.append(":  Pocessed in ");
-        this.outBldr.append(new Double(mins / (1000 * 60)));
+        this.outBldr.append(procTime);
         this.outBldr.append(" minute(s).\n");
+      //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^///////
+      // DEBUGGING INFORMATION: We need to figure out what is going on in the //
+      // above code, because the processing time is not calculating right.    //
+      // When the timespan between start and finish times in 9500 milliseconds//
+      // and the the math is performed to bring it to a float, it always comes//
+      // out as 0.0, when it should come out as 0.15833. I do not understand  //
+      // why this is not working, but it needs to be figured out.             //
+      //                                                                      //
+      // Just emailed a Java mailing list seeking help with this issue. Did so//
+      // on Saturday, 03/11/2017 @ 09:38                                      //
+      //////////////////////////////////////////////////////////////////////////
         
         // We need to set everything to null, so that we can be garbage col-
         //+ lected.
@@ -412,6 +426,300 @@ public class Processor {
         }
         
     }
+    
+    /**
+     * This method adds an EDI transmission envelope to the database audits
+     * table. The transmissions should be maintained for a period after the
+     * transmission arrives, in case there are any issues with the transmission
+     * that are not discovered until later.
+     * <p>
+     * The EDI transmission audits are broken into three (3) tables on the
+     * database:
+     * <ul>
+     *  <li>is_edi_audits: This table stores audit information about the EDI
+     *      transmission envelopes. The data collected are:
+     *      <ul>
+     *          <li>Interchange Control Number (ISA13)</li>
+     *          <li>Interchange Date (ISA09) and Interchange Time (ISA10)</li>
+     *          <li>Interchange Sender ID (ISA06)</li>
+     *          <li>Interchange Receiver ID (ISA08)</li>
+     *          <li>Functional Group Count (counted internally)</li>
+     *          <li>Error Count (determined via validation algorithms)</li>
+     *      </ul></li>
+     *  <li>is_edi_audit_grp_details: This table stores audit information about
+     *      each Functional Group within an envelope.</li>
+     *  <li>is_edi_audit_doc_details: This table stores audit information about
+     *      each transaction within a functional group.</li>
+     * </ul>
+     * @see com.is2300.jedi.edi.Processor.auditGroup for more details about the
+     * Functional Group auditing data collected.
+     * @see com.is2300.jedi.edi.Processor.auditTransaction for more details 
+     * about the Transaction auditing data collected.
+     * 
+     * @param ctlNumber Interchange Control Number from the ISA13 field
+     * @param date  Interchange Date from the ISA09 field, along with the 
+     *              Interchange Time from the ISA10 field.
+     * @param sender    Interchange Sender ID from the ISA06 field
+     * @param rcvr  Interchange Receiver ID from the ISA08 field
+     * @param grpCount  Total number of Functional Groups contained in the 
+     *                  envelope.
+     * @param errCount  Total number of errors discovered through validation in
+     *                  the envelope. This only counts interchange envelope
+     *                  errors...Group and Transaction errors are tracked in 
+     *                  those tables.
+     */
+    private void auditEnvelope(Integer ctlNumber, 
+                               Date date, 
+                               String sender,
+                               String rcvr, 
+                               Integer grpCount, 
+                               Integer errCount) {
+        // Create a StringBuilder object in which to build the SQl statement to
+        //+ use for storing the data to the is_edi_audits table.
+        StringBuilder sql = new StringBuilder();
+        
+        // Convert our date to a SQL date.
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+        
+        // Start the SQL string with the INSERT statement, because we will be
+        //+ adding a new record to the data table.
+        sql.append("INSERT INTO `is_jedi`.`is_edi_audits` VALUES(0,\n");
+        
+        // Now, add in the various values that we will need to store.
+//        sql.append("`TxCtlNum`='");
+        sql.append(ctlNumber);
+        sql.append(",\n");
+//        sql.append("`TxDate`='");
+        sql.append("'");
+        
+        // We need to pause here to build the date. The date should be stored
+        //+ as a string in the format YYMMDD HHMMSS. To accomplish this, we need
+        //+ to use our SimpleDateFormat to create the properly formatted string.
+        SimpleDateFormat df = new SimpleDateFormat("yy-MM-dd");
+        
+        // Now that we've created the proper format for our date to be stored in
+        //+ the database, we need to add it to our INSERT statement.
+        sql.append(df.format(date.getTime()));
+        sql.append("',\n");
+        
+        // Next, continue adding the data to the table.
+//        sql.append("`TxSenderID`='");
+        sql.append("'");
+        sql.append(sender);
+        sql.append("',\n");
+//        sql.append("`TxRcvrID`='");
+        sql.append("'");
+        sql.append(rcvr);
+        sql.append("',\n");
+//        sql.append("`GrpCnt`=");
+        sql.append(grpCount);
+        sql.append(",\n");
+//        sql.append("`ErrCnt`=");
+        sql.append(errCount);
+        sql.append(");");
+        
+        try {
+            // Now that we've got our statement built, we need to execute it on the
+            //+ database server.
+            this.stmt.execute(sql.toString());
+        } catch (SQLException ex) {
+            Exceptions.printStackTrace(ex);
+            this.cal = Calendar.getInstance();
+            this.time = this.fmt.format(this.cal.getTime());
+            this.io.getOut().println(time + ":  The following SQL Exception "
+                    + "was caught:");
+            ex.printStackTrace(this.io.getErr());
+            this.outBldr.append(this.time);
+            this.outBldr.append(":  The following SQL Exception was caught:\n\t");
+            this.outBldr.append(ex.getLocalizedMessage());
+            this.outBldr.append("\n");
+        }
+    }
+
+    /**
+     * This method adds an EDI transmission envelope to the database audits
+     * table. The transmissions should be maintained for a period after the
+     * transmission arrives, in case there are any issues with the transmission
+     * that are not discovered until later.
+     * <p>
+     * The EDI transmission audits are broken into three (3) tables on the
+     * database:
+     * <ul>
+     *  <li>is_edi_audits: This table stores audit information about the EDI
+     *      transmission envelopes. The data collected are:
+     *  <li>is_edi_audit_grp_details: This table stores audit information about
+     *      each Functional Group within an envelope.</li>
+     *      <ul>
+     *          <li>Functional Group Control Number (GS06)</li>
+     *          <li>Interchange Control Number (ISA13)</li>
+     *          <li>Functional Group Code (GS01)</li>
+     *          <li>Transaction Count (GE01)</li>
+     *          <li>Error Count (determined via validation algorithms)</li>
+     *      </ul></li>
+     *  <li>is_edi_audit_doc_details: This table stores audit information about
+     *      each transaction within a functional group.</li>
+     * </ul>
+     * @see com.is2300.jedi.edi.Processor.auditEnvelope for more details about 
+     * the transaction envelope auditing data collected.
+     * @see com.is2300.jedi.edi.Processor.auditTransaction for more details 
+     * about the Transaction auditing data collected.
+     * 
+     * @param ctlNumber Functional Group Control Number from the GS06 field
+     * @param txCtlNumber  Interchange Control Number from the ISA13 field
+     * @param grpCode   Functional Group Code from the GS01 field
+     * @param docCount  Count of documents in the Functional Group from the GE01
+     *                  field
+     * @param errCount  Total number of errors discovered through validation in
+     *                  the Functional Group. This only counts Functional Group
+     *                  errors...Envelope and Transaction errors are tracked in 
+     *                  those tables.
+     */
+    private void auditGroup(Integer ctlNumber, 
+                            Integer txCtlNumber, 
+                            String grpCode,
+                            Integer docCount, 
+                            Integer errCount) {
+        // Create a StringBuilder object in which to build the SQl statement to
+        //+ use for storing the data to the is_edi_audits table.
+        StringBuilder sql = new StringBuilder();
+        
+        // Start the SQL string with the INSERT statement, because we will be
+        //+ adding a new record to the data table.
+        sql.append("INSERT INTO `is_jedi`.`is_edi_audit_grp_details`");
+        sql.append(" VALUES(0,\n");
+        
+        // Now, add in the various values that we will need to store.
+//        sql.append("`GrpCtlNum`='");
+        sql.append(ctlNumber);
+        sql.append(",\n");
+//        sql.append("`TxCtlNum`='");
+        sql.append(txCtlNumber);
+        sql.append(",\n'");
+//        sql.append("`GrpCode`='");
+        sql.append(grpCode);
+        sql.append("',\n");
+//        sql.append("`DocCnt`='");
+        sql.append(docCount);
+        sql.append(",\n");
+//        sql.append("`ErrCnt`=");
+        sql.append(errCount);
+        sql.append(");");
+        
+        try {
+            // Now that we've got our statement built, we need to execute it on the
+            //+ database server.
+            this.stmt.execute(sql.toString());
+        } catch (SQLException ex) {
+            Exceptions.printStackTrace(ex);
+            this.cal = Calendar.getInstance();
+            this.time = this.fmt.format(this.cal.getTime());
+            this.io.getOut().println(time + ":  The following SQL Exception "
+                    + "was caught:");
+            ex.printStackTrace(this.io.getErr());
+            this.outBldr.append(this.time);
+            this.outBldr.append(":  The following SQL Exception was caught:\n\t");
+            this.outBldr.append(ex.getLocalizedMessage());
+            this.outBldr.append("\n");
+        }
+    }
+
+    /**
+     * This method adds an EDI transmission envelope to the database audits
+     * table. The transmissions should be maintained for a period after the
+     * transmission arrives, in case there are any issues with the transmission
+     * that are not discovered until later.
+     * <p>
+     * The EDI transmission audits are broken into three (3) tables on the
+     * database:
+     * <ul>
+     *  <li>is_edi_audits: This table stores audit information about the EDI
+     *      transmission envelopes. The data collected are:
+     *  <li>is_edi_audit_grp_details: This table stores audit information about
+     *      each Functional Group within an envelope.</li>
+     *  <li>is_edi_audit_doc_details: This table stores audit information about
+     *      each transaction within a functional group.</li>
+     *      <ul>
+     *          <li>Document Control Number (ST02)</li>
+     *          <li>Interchange Control Number (ISA13)</li>
+     *          <li>Functional Group Control Number (GS06)</li>
+     *          <li>Document Type (ST01)</li>
+     *          <li>Document Count (GE01)</li>
+     *          <li>Error Count (determined via validation algorithms)</li>
+     *          <li>Accepted (boolean whether accepted or rejected)</li>
+     *      </ul></li>
+     * </ul>
+     * @see com.is2300.jedi.edi.Processor.auditGroup for more details about the
+     * Functional Group auditing data collected.
+     * @see com.is2300.jedi.edi.Processor.auditEnvelope for more details 
+     * about the transaction Envelope auditing data collected.
+     * 
+     * @param ctlNumber Document Control Number from the ST02 field
+     * @param txCtlNumber  Interchange Control Number from the ISA13 field.
+     * @param grpCtlNumber Functional Group Control Number from the GS06 field
+     * @param docType   Document Type Code from the ST01 field
+     * @param docCount  Total number of documents contained in the transaction.
+     * @param errCount  Total number of errors discovered through validation in
+     *                  the envelope. This only counts interchange envelope
+     *                  errors...Group and Transaction errors are tracked in 
+     *                  those tables.
+     * @param accepted  True if the document was accepted, false if rejected.
+     */
+    private void auditTransaction(Integer ctlNumber, 
+                            Integer txCtlNumber, 
+                            Integer grpCtlNumber,
+                            String docType, 
+                            Integer docCount,
+                            Integer errCount,
+                            Boolean accepted) {
+        // Create a StringBuilder object in which to build the SQl statement to
+        //+ use for storing the data to the is_edi_audits table.
+        StringBuilder sql = new StringBuilder();
+        
+        // Start the SQL string with the INSERT statement, because we will be
+        //+ adding a new record to the data table.
+        sql.append("INSERT INTO `is_jedi`.`is_edi_audit_doc_details`");
+        sql.append(" VALUES(0,\n");
+        
+        // Now, add in the various values that we will need to store.
+//        sql.append("`DocCtlNum`='");
+        sql.append(ctlNumber);
+        sql.append(",\n");
+//        sql.append("`TxCtlNum`='");
+        sql.append(txCtlNumber);
+        sql.append(",\n");
+//        sql.append("`GrpCtlNum`='");
+        sql.append(grpCtlNumber);
+        sql.append(",\n'");
+//        sql.append("`DocType`='");
+        sql.append(docType);
+        sql.append("',\n");
+//        sql.append("`DocCnt`='");
+        sql.append(docCount);
+        sql.append(",\n");
+//        sql.append("`ErrCnt`=");
+        sql.append(errCount);
+        sql.append(",\n");
+//        sql.append("`Accepted`=");
+        sql.append(accepted);
+        sql.append(");");
+        
+        try {
+            // Now that we've got our statement built, we need to execute it on the
+            //+ database server.
+            this.stmt.execute(sql.toString());
+        } catch (SQLException ex) {
+            Exceptions.printStackTrace(ex);
+            this.cal = Calendar.getInstance();
+            this.time = this.fmt.format(this.cal.getTime());
+            this.io.getOut().println(time + ":  The following SQL Exception "
+                    + "was caught:");
+            ex.printStackTrace(this.io.getErr());
+            this.outBldr.append(this.time);
+            this.outBldr.append(":  The following SQL Exception was caught:\n\t");
+            this.outBldr.append(ex.getLocalizedMessage());
+            this.outBldr.append("\n");
+        }
+    }
     //</editor-fold>
 
     //<editor-fold desc="  EDI Processing Algorithms  ">
@@ -434,7 +742,7 @@ public class Processor {
         this.outBldr.append(":  Begin shepherding EDI file process...\n");
         
         // The first thing that we need to do is to setup the database access.
-//        this.dbSetup();
+        this.dbSetup();
         
         // Handle the file. This includes retrieving the file from the SFTP or
         //+ FTPS server and storing it on a local disk for easier access. Once
@@ -557,6 +865,16 @@ public class Processor {
         Boolean validTSet = false;
         Boolean validSeg = false;
         
+        // Declare two variables: one (1) for transaction control number and one
+        //+ (1) for group control number.
+        Integer txCtlNum = 0;
+        Integer grpCtlNum = 0;
+        
+        // Declare counters for error for the envelopes, groups and docs.
+        Integer envErrCnt = 0;
+        Integer grpErrCnt = 0;
+        Integer docErrCnt = 0;
+        
         // We need to loop through the list of lines from the file and split 
         //+ them into their individual fields. Once they are split into the
         //+ fields, we need to determine what the line represents and store the
@@ -573,9 +891,26 @@ public class Processor {
             // Now, determine what needs to be done. This is accomplished by 
             //+ looking at the value of the zeroeth (0th) element of the array.
             switch ( fields[0].toLowerCase() ) {
-                case "isa":     // Use fall-through
                 case "iea":
+                    // We need to create a new Date object based upon the date
+                    //+ and time transmitted in the envelope header.
+                    
+                    this.auditEnvelope(txCtlNum, 
+                                       Utils.string2Date(
+                                           this.envelope.get(
+                                                   this.envelope.size() - 1)[9],
+                                           this.envelope.get(
+                                                   this.envelope.size() - 1)[10]
+                                       ), this.envelope.get(
+                                           this.envelope.size() - 1)[6], 
+                                       this.envelope.get(
+                                           this.envelope.size() - 1)[8], 
+                                       new Integer(fields[1]), envErrCnt);
+                case "isa":
                     this.envelope.add(fields);
+                    if ( fields[0].equalsIgnoreCase("isa") ) txCtlNum = new 
+                                                            Integer(fields[13]);
+                    
                     break;
                 case "ge":
                     // Grab the total transactions in this functional group.
@@ -614,13 +949,39 @@ public class Processor {
                     this.cal = Calendar.getInstance();
                     this.time = this.fmt.format(cal.getTime());
                     this.io.getOut().println(time + ":  " + msg);
+                    this.outBldr.append(time);
+                    this.outBldr.append(":  ");
                     this.outBldr.append(msg);
                     this.outBldr.append("\n");
+                    
+                    // Store the Functional Group information to the group
+                    //+ audits table in the database.
+                    this.auditGroup(new Integer(this.group.get(
+                                    this.group.size() - 1)[6]), 
+                                    new Integer(this.envelope.get(
+                                            this.envelope.size() - 1)[13]), 
+                                    this.group.get(this.group.size() - 1)[1], 
+                                    new Integer(fields[1]), 
+                                    grpErrCnt);
                 case "gs":
                     this.group.add(fields);
+                    
+                    if ( fields[0].equalsIgnoreCase("gs") ) grpCtlNum = new 
+                                                             Integer(fields[6]);
                     break;
                 case "se":
                     this.t_Count += 1;  // Then fall-through
+                    
+                    // We need to add the document to our document audits table.
+                    this.auditTransaction(new Integer(fields[2]), 
+                            new Integer(this.envelope.get(
+                                    this.envelope.size() - 1)[13]), 
+                            new Integer(this.group.get(
+                                    this.group.size() - 1)[6]), 
+                            this.transaction.get(0)[1], 
+                            new Integer(this.group.get(
+                                    this.group.size() - 1)[6]), 
+                            docErrCnt, validSeg);
                 default:        // All other segments
                     this.transaction.add(fields);
             }
