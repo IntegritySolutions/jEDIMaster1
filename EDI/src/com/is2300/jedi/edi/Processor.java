@@ -42,6 +42,7 @@ import com.is2300.jedi.edi.validators.FGValidator;
 import com.is2300.jedi.edi.utils.Utils;
 import com.is2300.jedi.edi.validators.EnvelopeValidator;
 import com.is2300.jedi.edi.validators.Validate810Segments;
+import com.is2300.jedi.edi.validators.Validate824Segments;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -1026,6 +1027,21 @@ public class Processor {
                             //+ there are more than zero, we need to invalidate
                             //+ the transaction.
                             if ( docErrCnt > 0 ) validSeg = false;
+                            
+                            // Break out of the switch case block.
+                            break;
+                        case "824": // Application Advice
+                            // We need to validate the segments
+                            docErrCnt = Validate824Segments.validate(
+                                                              this.transaction);
+                            
+                            // See how many, if any, segment errors we have. If
+                            //+ there are more than zero, we need to invalidate
+                            //+ the transaction.
+                            if ( docErrCnt > 0 ) validSeg = false;
+                            
+                            // Break out of the switch case block.
+                            break;
                     }
                     
                     // We need to add the document to our document audits table.
