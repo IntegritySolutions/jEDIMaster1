@@ -19,7 +19,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.is2300.jedi.edi.impl;
+package com.is2300.jedi.edi.validators;
 
 import com.is2300.jedi.edi.api.Validator;
 
@@ -78,12 +78,11 @@ import com.is2300.jedi.edi.api.Validator;
  * @version 0.5.0
  * @since 0.5.0
  */
-public class Validate810Segments implements Validator {
+public class Validate810Segments {
 
-    @Override
-    public Boolean validate(String toValidate) {
+    public static Boolean validate(String toValidate) {
         // Create a return value.
-        Boolean isValid = false;    // Default it to invalid segment.
+        Boolean isValid;    // Default it to invalid segment.
         
         // We need to check the supplied segment to see if it is valid.
         switch ( toValidate ) {
@@ -91,8 +90,8 @@ public class Validate810Segments implements Validator {
             //+ variable to `true`, we're just going to use the "fall-through"
             //+ of the `case` functionality and only use the `break` statement
             //+ when we set the return variable to `true`.
-            case "ISA":
-            case "GS":
+//            case "ISA":
+//            case "GS":
             case "ST":
             case "BIG":
             case "CUR":
@@ -114,9 +113,12 @@ public class Validate810Segments implements Validator {
             case "AMT":
             case "CTT":
             case "SE":
-            case "GE":
-            case "IEA":
+//            case "GE":
+//            case "IEA":
                 isValid = true;
+                break;
+            default:
+                isValid = false;
                 break;
         }
         
@@ -124,10 +126,9 @@ public class Validate810Segments implements Validator {
         return isValid;
     }
 
-    @Override
-    public Boolean validate(String toValidate, String toCompare) {
-        //To change body of generated methods, choose Tools | Templates.
-        throw new UnsupportedOperationException("Unused: Not Implemented"); 
+    public static Boolean validate(String toValidate, String toCompare) {
+        // Check whether the two provided strings are the same.
+        return toValidate.equals(toCompare);
     }
 
 }

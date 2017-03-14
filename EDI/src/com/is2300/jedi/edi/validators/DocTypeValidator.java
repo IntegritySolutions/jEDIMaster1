@@ -19,7 +19,7 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.is2300.jedi.edi.impl;
+package com.is2300.jedi.edi.validators;
 
 import com.is2300.jedi.edi.api.Validator;
 
