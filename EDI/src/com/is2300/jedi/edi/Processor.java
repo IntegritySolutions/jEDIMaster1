@@ -41,6 +41,7 @@ import com.is2300.jedi.edi.gui.options.EDISettingsOptionsPanelController;
 import com.is2300.jedi.edi.validators.FGValidator;
 import com.is2300.jedi.edi.utils.Utils;
 import com.is2300.jedi.edi.validators.EnvelopeValidator;
+import com.is2300.jedi.edi.validators.Validate810Segments;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -1008,7 +1009,24 @@ public class Processor {
                                                              Integer(fields[6]);
                     break;
                 case "se":
-                    this.t_Count += 1;  // Then fall-through
+                    // Increment the transaction count.
+                    this.t_Count += 1;
+                    
+                    // Add the SE segment to the transaction.
+                    this.transaction.add(fields);
+                    
+                    // The first thing to do is to check for the document type.
+                    switch (this.transaction.get(0)[1]) {
+                        case "810": // Invoice
+                            // We need to validate the segments
+                            docErrCnt = Validate810Segments.validate(
+                                                              this.transaction);
+                            
+                            // See how many, if any, segment errors we have. If
+                            //+ there are more than zero, we need to invalidate
+                            //+ the transaction.
+                            if ( docErrCnt > 0 ) validSeg = false;
+                    }
                     
                     // We need to add the document to our document audits table.
                     this.auditTransaction(new Integer(fields[2]), 
@@ -1020,6 +1038,17 @@ public class Processor {
                             new Integer(this.group.get(
                                     this.group.size() - 1)[6]), 
                             docErrCnt, validSeg);
+                    
+                    // Lastly, break out of the switch so we don't add the
+                    //+ segment a second time. This is just good practice, even
+                    //+ though we will clear the transaction list on the next
+                    //+ ST segment we encounter.
+                    break;
+                case "st":
+                    // We need to reset the transaction list for this tran-
+                    //+ saction set.
+                    this.transaction.clear();
+                    // Then fall through.
                 default:        // All other segments
                     this.transaction.add(fields);
             }
