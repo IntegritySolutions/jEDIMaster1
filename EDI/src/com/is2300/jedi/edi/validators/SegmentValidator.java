@@ -279,6 +279,9 @@ public class SegmentValidator {
                         retVal.add(errors);
                     } // End of null check.
                 } // End of mandatory data check.
+                
+                // Increment our element marker
+                currentElement++;
             } // End for each loop.
         } else {
             // Houston, we have a problem! We were not given enough information,

@@ -66,6 +66,8 @@ import java.util.List;
 public class Validate824Segments {
 
     public static Integer validate(List<String[]> toValidate) {
+        // Debugger loop counter.
+        int dbgCount = 0;
         // Create a return value.
         Integer errCnt = 0;
         
@@ -88,252 +90,332 @@ public class Validate824Segments {
                 //+ variable to `true`, we're just going to use the "fall-through"
                 //+ of the `case` functionality and only use the `break` statement
                 //+ when we set the return variable to `true`.
-    //            case "ISA":
-    //            case "GS":
+//                case "ISA":
+//                case "GS":
+                ////////////////////////////////////////////////////////////////
+                /////////////////// I N F O R M A T I O N //////////////////////
+                ////////////////////////////////////////////////////////////////
+                // In the following `case` blocks, we create multiple Object  //
+                // arrays which are clones of the Object array, arySegment.   //
+                // This is necessary to make sure that each element of our    //
+                // List<Object[]> is unique. If we were to simply change the  //
+                // data in `arySegment`, then readd it to the List<Object[]>, //
+                // fieldInfo, we would have a list of the proper number of    //
+                // elements, but each element would contain the same data.    //
+                // This is because the List interface DOES NOT hold the data, //
+                // but a reference to the data. Therefore, whenever we were to//
+                // change the data in `arySegment`, the data in each element  //
+                // of the list gets changed as well. The clones of arySegment //
+                // allow us to place different data in each element of the    //
+                // `fieldInfo` List, which is the desired outcome. After we   //
+                // are done with each Object[] array, other than arySegment,  //
+                // we set that Object[] array to null so that it can be       //
+                // cleaned up by the garbage collector and we don't waste any //
+                // system resources, nor create a memory leak.                //
+                ////////////////////////////////////////////////////////////////
                 case "ST":
+                    // Start by clearing the fieldInfo list.
+                    fieldInfo.clear();
+                    
                     // Create a List of Segment data types with min and max
                     //+ length value.
-                    arySegment[0] = "ID";   // ST01
-                    arySegment[1] = 3;
-                    arySegment[2] = 3;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "AN";   // ST02
-                    arySegment[1] = 4;
-                    arySegment[2] = 9;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
+                    Object[] st01 = arySegment.clone();
+                    st01[0] = "ID";   // ST01
+                    st01[1] = 3;
+                    st01[2] = 3;
+                    st01[3] = true;
+                    fieldInfo.add(st01);
+                    Object[] st02 = arySegment.clone();
+                    st02[0] = "AN";   // ST02
+                    st02[1] = 4;
+                    st02[2] = 9;
+                    st02[3] = true;
+                    fieldInfo.add(st02);
                     
                     errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    st01 = null;
+                    st02 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "BGN":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length value.
-                    arySegment[0] = "ID";   // BGN01
-                    arySegment[1] = 2;
-                    arySegment[2] = 2;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "AN";   // BGN02
-                    arySegment[1] = 1;
-                    arySegment[2] = 30;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "DT";   // BGN03
-                    arySegment[1] = 8;
-                    arySegment[2] = 8;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "TM";   // BGN04
-                    arySegment[1] = 4;
-                    arySegment[2] = 8;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
+                    Object[] bgn01 = arySegment.clone();
+                    bgn01[0] = "ID";   // BGN01
+                    bgn01[1] = 2;
+                    bgn01[2] = 2;
+                    bgn01[3] = true;
+                    fieldInfo.add(bgn01);
+                    Object[] bgn02 = arySegment.clone();
+                    bgn02[0] = "AN";   // BGN02
+                    bgn02[1] = 1;
+                    bgn02[2] = 30;
+                    bgn02[3] = true;
+                    fieldInfo.add(bgn02);
+                    Object[] bgn03 = arySegment.clone();
+                    bgn03[0] = "DT";   // BGN03
+                    bgn03[1] = 8;
+                    bgn03[2] = 8;
+                    bgn03[3] = true;
+                    fieldInfo.add(bgn03);
+                    Object[] bgn04 = arySegment.clone();
+                    bgn04[0] = "TM";   // BGN04
+                    bgn04[1] = 4;
+                    bgn04[2] = 8;
+                    bgn04[3] = false;
+                    fieldInfo.add(bgn04);
                     
-                    errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
+                    errors = SegmentValidator.validate(toValidate.get(x), 4, 3, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    bgn01 = null;
+                    bgn02 = null;
+                    bgn03 = null;
+                    bgn04 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "N1":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length value.
-                    arySegment[0] = "ID";   // N101
-                    arySegment[1] = 2;
-                    arySegment[2] = 3;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "ID";   // N103
-                    arySegment[1] = 1;
-                    arySegment[2] = 2;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "AN";   // N104
-                    arySegment[1] = 2;
-                    arySegment[2] = 80;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
+                    Object[] n101 = arySegment.clone();
+                    n101[0] = "ID";   // N101
+                    n101[1] = 2;
+                    n101[2] = 3;
+                    n101[3] = true;
+                    fieldInfo.add(n101);
+                    Object[] n103 = arySegment.clone();
+                    n103[0] = "ID";   // N103
+                    n103[1] = 1;
+                    n103[2] = 2;
+                    n103[3] = false;
+                    fieldInfo.add(n103);
+                    Object[] n104 = arySegment.clone();
+                    n104[0] = "AN";   // N104
+                    n104[1] = 2;
+                    n104[2] = 80;
+                    n104[3] = false;
+                    fieldInfo.add(n104);
                     
-                    errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
+                    errors = SegmentValidator.validate(toValidate.get(x), 3, 1, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    n101 = null;
+                    n103 = null;
+                    n104 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "OTI":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length value.
-                    arySegment[0] = "ID";   // OTI01
-                    arySegment[1] = 1;
-                    arySegment[2] = 2;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "ID";   // OTI02
-                    arySegment[1] = 2;
-                    arySegment[2] = 3;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "AN";   // OTI03
-                    arySegment[1] = 1;
-                    arySegment[2] = 30;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "ID";   // OTI10
-                    arySegment[1] = 3;
-                    arySegment[2] = 3;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
+                    Object[] oti01 = arySegment.clone();
+                    oti01[0] = "ID";   // OTI01
+                    oti01[1] = 1;
+                    oti01[2] = 2;
+                    oti01[3] = true;
+                    fieldInfo.add(oti01);
+                    Object[] oti02 = arySegment.clone();
+                    oti02[0] = "ID";   // OTI02
+                    oti02[1] = 2;
+                    oti02[2] = 3;
+                    oti02[3] = true;
+                    fieldInfo.add(oti02);
+                    Object[] oti03 = arySegment.clone();
+                    oti03[0] = "AN";   // OTI03
+                    oti03[1] = 1;
+                    oti03[2] = 30;
+                    oti03[3] = true;
+                    fieldInfo.add(oti03);
+                    Object[] oti10 = arySegment.clone();
+                    oti10[0] = "ID";   // OTI10
+                    oti10[1] = 3;
+                    oti10[2] = 3;
+                    oti10[3] = false;
+                    fieldInfo.add(oti10);
                     
-                    errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
+                    errors = SegmentValidator.validate(toValidate.get(x), 4, 1, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    oti01 = null;
+                    oti02 = null;
+                    oti03 = null;
+                    oti10 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "DTM":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length value.
-                    arySegment[0] = "ID";   // DTM01
-                    arySegment[1] = 3;
-                    arySegment[2] = 3;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "DT";   // DTM02
-                    arySegment[1] = 8;
-                    arySegment[2] = 8;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "TM";   // DTM 03
-                    arySegment[1] = 4;
-                    arySegment[2] = 8;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
+                    Object[] dtm01 = arySegment.clone();
+                    dtm01[0] = "ID";   // DTM01
+                    dtm01[1] = 3;
+                    dtm01[2] = 3;
+                    dtm01[3] = true;
+                    fieldInfo.add(dtm01);
+                    Object[] dtm02 = arySegment.clone();
+                    dtm02[0] = "DT";   // DTM02
+                    dtm02[1] = 8;
+                    dtm02[2] = 8;
+                    dtm02[3] = false;
+                    fieldInfo.add(dtm02);
+                    Object[] dtm03 = arySegment.clone();
+                    dtm03[0] = "TM";   // DTM03
+                    dtm03[1] = 4;
+                    dtm03[2] = 8;
+                    dtm03[3] = false;
+                    fieldInfo.add(dtm03);
                     
-                    errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
+                    errors = SegmentValidator.validate(toValidate.get(x), 3, 1, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    dtm01 = null;
+                    dtm02 = null;
+                    dtm03 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "AMT":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length values.
-                    arySegment[0] = "ID";   // AMT01
-                    arySegment[1] = 1;
-                    arySegment[2] = 3;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "R";    // AMT02
-                    arySegment[1] = 1;
-                    arySegment[2] = 18;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
+                    Object[] amt01 = arySegment.clone();
+                    amt01[0] = "ID";   // AMT01
+                    amt01[1] = 1;
+                    amt01[2] = 3;
+                    amt01[3] = true;
+                    fieldInfo.add(amt01);
+                    Object[] amt02 = arySegment.clone();
+                    amt02[0] = "R";    // AMT02
+                    amt02[1] = 1;
+                    amt02[2] = 18;
+                    amt02[3] = true;
+                    fieldInfo.add(amt02);
                     
                     errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    amt01 = null;
+                    amt02 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "TED":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length values;
-                    arySegment[0] = "ID";   // TED01
-                    arySegment[1] = 1;
-                    arySegment[2] = 3;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "AN";   // TED02
-                    arySegment[1] = 1;
-                    arySegment[2] = 60;
-                    arySegment[3] = false;
-                    fieldInfo.add(arySegment);
+                    Object[] ted01 = arySegment.clone();
+                    ted01[0] = "ID";   // TED01
+                    ted01[1] = 1;
+                    ted01[2] = 3;
+                    ted01[3] = true;
+                    fieldInfo.add(ted01);
+                    Object[] ted02 = arySegment.clone();
+                    ted02[0] = "AN";   // TED02
+                    ted02[1] = 1;
+                    ted02[2] = 60;
+                    ted02[3] = false;
+                    fieldInfo.add(ted02);
                     
-                    errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
+                    errors = SegmentValidator.validate(toValidate.get(x), 2, 1, 
                                                        fieldInfo);
                     errCnt += errors.size();
+                    
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    ted01 = null;
+                    ted02 = null;
+                    
+                    // Break out of the switch block.
+                    break;
                 case "SE":
                     // Start by clearing the fieldInfo list.
                     fieldInfo.clear();
                     
                     // Then create a list of Segment data types with min and max
                     //+ length values.
-                    arySegment[0] = "N0";   // SE01
-                    arySegment[1] = 1;
-                    arySegment[2] = 10;
-                    arySegment[3] = true;
-                    fieldInfo.add(arySegment);
-                    arySegment[0] = "AN";   // SE02
-                    arySegment[1] = 4;
-                    arySegment[2] = 9;
-                    arySegment[3] = true;
+                    Object[] se01 = arySegment.clone();
+                    se01[0] = "N0";   // SE01
+                    se01[1] = 1;
+                    se01[2] = 10;
+                    se01[3] = true;
+                    fieldInfo.add(se01);
+                    Object[] se02 = arySegment.clone();
+                    se02[0] = "AN";   // SE02
+                    se02[1] = 4;
+                    se02[2] = 9;
+                    se02[3] = true;
+                    fieldInfo.add(se02);
                     
                     errors = SegmentValidator.validate(toValidate.get(x), 2, 2, 
                                                        fieldInfo);
                     errCnt += errors.size();
                     fieldInfo.add(arySegment);
-    //            case "GE":
-    //            case "IEA":
-                    isValid = true;
+//                case "GE":
+//                case "IEA":
+//                    isValid = true;
+                    // Prepare the Object arrays we created for garbage col-
+                    //+ lection.
+                    se01 = null;
+                    se02 = null;
+                    
+                    // Break out of the switch block.
                     break;
             } // End switch...case block.
-            
-            // If we ever have an invalid segment, we need to count the error
-            //+ because if we only have one error, we may still be able to use
-            //+ the transaction set, but more than one error and we may need to
-            //+ fail the whole transaction set.
-            if ( !isValid ) {
-                errCnt++;
-            }
+
+////////////////////////////////////////////////////////////////////////////////
+///////////////////// N O   L O N G E R   N E E D E D //////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//            // If we ever have an invalid segment, we need to count the error
+//            //+ because if we only have one error, we may still be able to use
+//            //+ the transaction set, but more than one error and we may need 
+//            //+ to fail the whole transaction set.
+//            if ( !isValid ) {
+//                errCnt++;
+//            }
+////////////////////////////////////////////////////////////////////////////////
         } // End for loop.
         
         // Return our error count.
         return errCnt;
-    }
-
-    private static void validateSegment(String[] segment, int numFields, 
-                                      int reqFields, List<Object[]> fieldInfo) {
-        // Create a List<Object[]> to return.
-        List<Object[]> retVal = new ArrayList();
-        
-        // Create an Object array to hold our returnable information. This 
-        //+ information is as follows:
-        //+     array[0] = String   Segment ID
-        //+     array[1] = Boolean  Segment in error
-        //+     array[2] = String   Description of error
-        Object[] errors = new Object[3];
-        
-        // Create some variables to hold the actual requirements for the field
-        //+ information to validate. The List<Object[]> should be as follows:
-        //+     List[0]: [0] String, [1] int, [2] int, [3] boolean
-        //+ And the fields represent:
-        //+     List[0]: [0] Data type, [1] min chars, [2] max chars, and
-        //+              [3] data required
-        String dataType;
-        Integer minChars;
-        Integer maxChars;
-        Boolean required;
-        
-        // Declare a marker to hold where we currently are in our String array.
-        int x = 0;
-        
-        // We are going to need to loop through the list to validate each field
-        //+ in the segment.
-        for ( Object[] obj : fieldInfo ) {
-            // First, grab our field information so we know what we are 
-            //+ validating.
-            dataType = (String) obj[0];
-            minChars = (Integer) obj[1];
-            maxChars = (Integer) obj[2];
-            required = (Boolean) obj[3];
-            
-            // Now, we need to loop through all of the fields in 
-        }
     }
 
 }
