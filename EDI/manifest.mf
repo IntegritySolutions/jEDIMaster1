@@ -3,6 +3,7 @@ AutoUpdate-Show-In-Client: true
 AutoUpdate-Essential-Module: true
 OpenIDE-Module: com.is2300.jedi.edi
 OpenIDE-Module-Name: EDI Processor
+OpenIDE-Module-Requires: org.openide.windows.WindowManager
 OpenIDE-Module-Short-Description: Processes incoming EDI transmission files.
 OpenIDE-Module-Long-Description: Pulls the EDI file from the SFTP or FTPS server to a local path, parses the file, stores the retainable data to the database, generates any EDI transmissions that are required and sends them, creates planning schedules for review.
 OpenIDE-Module-Display-Category: Base System (Server Side)

@@ -38,8 +38,11 @@ import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.util.NbPreferences;
 import com.is2300.jedi.edi.gui.options.EDISettingsOptionsPanelController;
-import com.is2300.jedi.edi.impl.FGValidator;
+import com.is2300.jedi.edi.validators.FGValidator;
 import com.is2300.jedi.edi.utils.Utils;
+import com.is2300.jedi.edi.validators.EnvelopeValidator;
+import com.is2300.jedi.edi.validators.Validate810Segments;
+import com.is2300.jedi.edi.validators.Validate824Segments;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -121,6 +124,12 @@ public class Processor {
      * functional group ends.
      */
     private Integer t_Count;
+    /**
+     * A <code>java.lang.Integer</code> to keep count of how many functional
+     * groups are in an interchange envelope. This counter gets reset after each
+     * envelope ends.
+     */
+    private Integer g_Count;
     /**
      * A <code>java.lang.Integer</code> to keep a running count of how many
      * transactions are contained in a single transmission.
@@ -239,6 +248,7 @@ public class Processor {
         
         // Initialize the various Integers in this class.
         this.t_Count = 0;
+        this.g_Count = 0;
         this.total_T_Count = 0;
         this.gT_Count = 0;
         
@@ -291,23 +301,15 @@ public class Processor {
         long strt = this.start.getTimeInMillis();
         long fnsh = this.end.getTimeInMillis();
         long mins = fnsh - strt;
-        float procTime = mins / 60000;
+        float procTime = mins / 60000f;
         this.io.getOut().printf("Processed in %1$f minute(s)", procTime);
         this.outBldr.append(this.time);
         this.outBldr.append(":  Pocessed in ");
         this.outBldr.append(procTime);
         this.outBldr.append(" minute(s).\n");
-      //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^///////
-      // DEBUGGING INFORMATION: We need to figure out what is going on in the //
-      // above code, because the processing time is not calculating right.    //
-      // When the timespan between start and finish times in 9500 milliseconds//
-      // and the the math is performed to bring it to a float, it always comes//
-      // out as 0.0, when it should come out as 0.15833. I do not understand  //
-      // why this is not working, but it needs to be figured out.             //
-      //                                                                      //
-      // Just emailed a Java mailing list seeking help with this issue. Did so//
-      // on Saturday, 03/11/2017 @ 09:38                                      //
-      //////////////////////////////////////////////////////////////////////////
+        
+        // Save the output report to file.
+        this.saveReport();
         
         // We need to set everything to null, so that we can be garbage col-
         //+ lected.
@@ -755,9 +757,6 @@ public class Processor {
         //+ to pass control to the parser() method.
         this.parser();
         
-        // Save the output report to file.
-        this.saveReport();
-        
         ////////////////////////////////////////////////////////////////////////
         //             K E E P   A S   T H E   L A S T   L I N E              //
         ////////////////////////////////////////////////////////////////////////
@@ -892,6 +891,44 @@ public class Processor {
             //+ looking at the value of the zeroeth (0th) element of the array.
             switch ( fields[0].toLowerCase() ) {
                 case "iea":
+                    // We need to make sure that this envelope is valid.
+                    validEnv = EnvelopeValidator.validate(
+                                this.envelope.get(this.envelope.size() - 1)[13],
+                                fields[2], new Integer(fields[1]), 
+                                this.g_Count);
+                    
+                    // Check our findings.
+                    if (!validEnv) {
+                        // Report to the Output Window that this group is not
+                        //+ valid and the control numbers, as well as the
+                        //+ reported and actual functional group counts.
+                        msg = "Interchange Envelope (";
+                        msg += this.envelope.get(this.envelope.size() - 1)[13];
+                        msg += ") is NOT valid.\n\t";
+                        msg += "Header Control Number (Trailer):  ";
+                        msg += this.envelope.get(this.envelope.size() - 1)[13];
+                        msg += " (" + fields[2] + ")\n\t";
+                        msg += "Number of reported functional groups (Actual):";
+                        msg += "  " + fields[1] + "(" + this.group.size() / 2;
+                        msg += ")";
+                    } else {
+                        msg = "Interchange Envelope (" + fields[2] + ") ";
+                        msg += "transmitted " + this.g_Count;
+                        msg += " funtional groups.";
+                    }
+                    
+                    // Reset our functional group counter.
+                    this.g_Count = 0;
+ 
+                    // Provide report to Output Window.
+                    this.cal = Calendar.getInstance();
+                    this.time = this.fmt.format(cal.getTime());
+                    this.io.getOut().println(time + ":  " + msg);
+                    this.outBldr.append(time);
+                    this.outBldr.append(":  ");
+                    this.outBldr.append(msg);
+                    this.outBldr.append("\n");
+                    
                     // We need to create a new Date object based upon the date
                     //+ and time transmitted in the envelope header.
                     
@@ -913,6 +950,9 @@ public class Processor {
                     
                     break;
                 case "ge":
+                    // Add the group to the functional group counter.
+                    this.g_Count += 1;
+                    
                     // Grab the total transactions in this functional group.
                     this.gT_Count = this.t_Count;
                     
@@ -924,7 +964,7 @@ public class Processor {
                     this.t_Count = 0;
                     
                     // Validate whether the functional group is valid.
-                    validGrp = FGValidator.validateGroup(
+                    validGrp = FGValidator.validate(
                             this.group.get(this.group.size() - 1)[6], fields[2], 
                             new Integer(fields[1]), this.gT_Count);
                     
@@ -970,7 +1010,39 @@ public class Processor {
                                                              Integer(fields[6]);
                     break;
                 case "se":
-                    this.t_Count += 1;  // Then fall-through
+                    // Increment the transaction count.
+                    this.t_Count += 1;
+                    
+                    // Add the SE segment to the transaction.
+                    this.transaction.add(fields);
+                    
+                    // The first thing to do is to check for the document type.
+                    switch (this.transaction.get(0)[1]) {
+                        case "810": // Invoice
+                            // We need to validate the segments
+                            docErrCnt = Validate810Segments.validate(
+                                                              this.transaction);
+                            
+                            // See how many, if any, segment errors we have. If
+                            //+ there are more than zero, we need to invalidate
+                            //+ the transaction.
+                            if ( docErrCnt > 0 ) validSeg = false;
+                            
+                            // Break out of the switch case block.
+                            break;
+                        case "824": // Application Advice
+                            // We need to validate the segments
+                            docErrCnt = Validate824Segments.validate(
+                                                              this.transaction);
+                            
+                            // See how many, if any, segment errors we have. If
+                            //+ there are more than zero, we need to invalidate
+                            //+ the transaction.
+                            if ( docErrCnt > 0 ) validSeg = false;
+                            
+                            // Break out of the switch case block.
+                            break;
+                    }
                     
                     // We need to add the document to our document audits table.
                     this.auditTransaction(new Integer(fields[2]), 
@@ -982,6 +1054,17 @@ public class Processor {
                             new Integer(this.group.get(
                                     this.group.size() - 1)[6]), 
                             docErrCnt, validSeg);
+                    
+                    // Lastly, break out of the switch so we don't add the
+                    //+ segment a second time. This is just good practice, even
+                    //+ though we will clear the transaction list on the next
+                    //+ ST segment we encounter.
+                    break;
+                case "st":
+                    // We need to reset the transaction list for this tran-
+                    //+ saction set.
+                    this.transaction.clear();
+                    // Then fall through.
                 default:        // All other segments
                     this.transaction.add(fields);
             }

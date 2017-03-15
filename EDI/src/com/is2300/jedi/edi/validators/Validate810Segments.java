@@ -19,9 +19,9 @@
  *    along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.is2300.jedi.edi.impl;
+package com.is2300.jedi.edi.validators;
 
-import com.is2300.jedi.edi.api.Validator;
+import java.util.List;
 
 /**
  * The EDI Invoice (Document Type 810) is used for sending billing information
@@ -78,56 +78,68 @@ import com.is2300.jedi.edi.api.Validator;
  * @version 0.5.0
  * @since 0.5.0
  */
-public class Validate810Segments implements Validator {
+public class Validate810Segments {
 
-    @Override
-    public Boolean validate(String toValidate) {
+    public static Integer validate(List<String[]> toValidate) {
         // Create a return value.
+        Integer errCnt = 0;
+        
+        // Create a validity flag.
         Boolean isValid = false;    // Default it to invalid segment.
         
-        // We need to check the supplied segment to see if it is valid.
-        switch ( toValidate ) {
-            // Since each case that is valid will set the `isValid` return 
-            //+ variable to `true`, we're just going to use the "fall-through"
-            //+ of the `case` functionality and only use the `break` statement
-            //+ when we set the return variable to `true`.
-            case "ISA":
-            case "GS":
-            case "ST":
-            case "BIG":
-            case "CUR":
-            case "REF":
-            case "N1":
-            case "N2":
-            case "N3":
-            case "N4":
-            case "PER":
-            case "ITD":
-            case "DTM":
-            case "N9":
-            case "MSG":
-            case "IT1":
-            case "PID":
-            case "SAC":
-            case "TX1":
-            case "TDS":
-            case "AMT":
-            case "CTT":
-            case "SE":
-            case "GE":
-            case "IEA":
-                isValid = true;
-                break;
-        }
+        // Loop through all of the items in the list.
+        for ( int x = 0; x < toValidate.size() - 1; x++ ) {
+            // We need to check the supplied segment to see if it is valid.
+            switch ( toValidate.get(x)[0] ) {
+                // Since each case that is valid will set the `isValid` return 
+                //+ variable to `true`, we're just going to use the "fall-through"
+                //+ of the `case` functionality and only use the `break` statement
+                //+ when we set the return variable to `true`.
+    //            case "ISA":
+    //            case "GS":
+                case "ST":
+                case "BIG":
+                case "CUR":
+                case "REF":
+                case "N1":
+                case "N2":
+                case "N3":
+                case "N4":
+                case "PER":
+                case "ITD":
+                case "DTM":
+                case "N9":
+                case "MSG":
+                case "IT1":
+                case "PID":
+                case "SAC":
+                case "TX1":
+                case "TDS":
+                case "AMT":
+                case "CTT":
+                case "SE":
+    //            case "GE":
+    //            case "IEA":
+                    isValid = true;
+                    break;
+            } // End switch...case block.
+            
+            // If we ever have an invalid segment, we need to count the error
+            //+ because if we only have one error, we may still be able to use
+            //+ the transaction set, but more than one error and we may need to
+            //+ fail the whole transaction set.
+            if ( !isValid ) {
+                errCnt++;
+            }
+        } // End for loop.
         
-        // Return our validation discovery.
-        return isValid;
+        // Return our error count.
+        return errCnt;
     }
 
-    @Override
-    public Boolean validate(String toValidate, String toCompare) {
-        //To change body of generated methods, choose Tools | Templates.
-        throw new UnsupportedOperationException("Unused: Not Implemented"); 
+    public static Boolean validate(String toValidate, String toCompare) {
+        // Check whether the two provided strings are the same.
+        return toValidate.equals(toCompare);
     }
 
 }

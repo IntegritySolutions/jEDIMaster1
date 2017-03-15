@@ -186,4 +186,33 @@ public class Utils {
         // Return our new Date object.
         return new Date(year, month, day, hours, minutes, seconds);
     }
+    
+    
+    public static Date string2Time(String time) {
+        // Declare three strings to hold the house, minutes and seconds once we
+        //+ parse them out of the time string that is provided.
+        Integer hours = null;
+        Integer minutes = null;
+        Integer seconds = null;
+            
+        // Next, we need to deal with the time. So, we need to check its length.
+        if ( time.length() == 4 ) {
+            // The format of the string is HHMM, so we need to parse those
+            //+ individual fields out of the string.
+            hours = new Integer(time.substring(0, 2));
+            minutes = new Integer(time.substring(2, 4));
+            seconds = 0;
+            
+        } else if ( time.length() == 6 ) {
+            // The format of the string is HHMMSS, so we need to parse those
+            //+ individual fields out of the string.
+            hours = new Integer(time.substring(0, 2));
+            minutes = new Integer(time.substring(2, 4));
+            seconds = new Integer(time.substring(4, 6));
+            
+        }
+        
+        // Return our new Date object.
+        return new Date(0, 0, 0, hours, minutes, seconds);
+}
 }
